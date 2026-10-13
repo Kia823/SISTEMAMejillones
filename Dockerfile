@@ -1,5 +1,6 @@
 FROM php:8.3-cli
 
+# Instalar dependencias del sistema y Node.js
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -7,14 +8,26 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
     libonig-dev \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && docker-php-ext-install pdo pdo_mysql zip gd mbstring
 
+# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 COPY . .
 
+# Instalar dependencias de PHP
 RUN composer install --no-dev --optimize-autoloader
+
+# Instalar dependencias de Node.js y compilar Vite
+RUN npm install && npm run build
+
+# Limpiar y cachear configuración
+RUN php artisan config:clear
+RUN php artisan cache:clear
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
