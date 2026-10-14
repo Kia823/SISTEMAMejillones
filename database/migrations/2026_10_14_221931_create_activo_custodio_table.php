@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('activo_custodio', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_activo')->constrained('activos_fijos')->onDelete('cascade');
-            $table->foreignId('id_usuario')->constrained('usuarios')->onDelete('cascade');
+            $table->foreignId('id_activo')->constrained('activos_fijos', 'id_activo')->onDelete('cascade');
+            $table->foreignId('id_usuario')->constrained('usuarios', 'id_usuario')->onDelete('cascade');
             $table->timestamps();
             
             // Índice compuesto para evitar duplicados
