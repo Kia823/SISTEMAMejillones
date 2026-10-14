@@ -26,10 +26,13 @@ RUN composer install --no-dev --optimize-autoloader
 RUN npm install && npm run build
 
 # Limpiar y cachear configuración
-# Crear archivo SQLite por si la configuración por defecto cae en él (no hay .env en build)
+# Usar drivers en memoria durante el build (no hay .env, SQLite sin tablas)
+ENV CACHE_STORE=array \
+    SESSION_DRIVER=array \
+    QUEUE_CONNECTION=sync
 RUN touch /var/www/html/database/database.sqlite
 RUN php artisan config:clear
-RUN php artisan cache:clear
+RUN php artisan cache:clear --no-interaction || true
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
