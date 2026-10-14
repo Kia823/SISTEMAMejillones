@@ -749,6 +749,26 @@ class ActivoController extends Controller
 
         $activos = $query->orderBy('updated_at', 'desc')->paginate(15)->appends($request->query());
 
-        return view('activos.baja', compact('activos'));
-    }
+         return view('activos.baja', compact('activos'));
+     }
+
+     /**
+      * Obtener custodios asignados a un ambiente específico
+      * Para auto-seleccionar custodios al crear un activo en ese ambiente
+      */
+     public function custodiosPorAmbiente($id_ambiente)
+     {
+         $custodios = User::whereHas('activosCustodiados', function($q) use ($id_ambiente) {
+             $q->where('id_ambiente', $id_ambiente);
+         })
+         ->orWhereHas('itemsVigentes', function($q) use ($id_ambiente) {
+             $q->where('items.id_ambiente', $id_ambiente);
+         })
+         ->where('estado', 'ACTIVO')
+         ->get(['id_usuario', 'nombre_completo', 'ci'])
+         ->sortBy('nombre_completo');
+
+         return response()->json($custodios);
+     }
+ }
 }

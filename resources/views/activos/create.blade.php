@@ -165,29 +165,29 @@
                 <span class="error-msg" data-for="estado_fisico"></span>
             </label>
 
-            {{-- CUSTODIO CON BUSCADOR --}}
-            <label class="full">Custodio *
-                <input type="text" id="buscador-custodio" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
-                       style="margin-bottom: 6px; background: #f8fafc; font-size: 13px;"
-                       onkeyup="filtrarCustodios(this.value)">
+             {{-- CUSTODIOS CON BUSCADOR --}}
+             <label class="full">Custodios *
+                 <input type="text" id="buscador-custodio" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
+                        style="margin-bottom: 6px; background: #f8fafc; font-size: 13px;"
+                        onkeyup="filtrarCustodios(this.value)">
 
-                <select name="id_custodio" id="id_custodio" size="5" style="height: 110px;">
-                    <option value="">— Seleccione custodio de la lista —</option>
-                    @foreach ($usuarios as $usr)
-                        @php
-                            $itemActivo = $usr->items->first();
-                            $nroItem = $itemActivo ? 'Ítem #' . $itemActivo->numero_item : 'Sin ítem';
-                        @endphp
-                        <option value="{{ $usr->id_usuario }}"
-                                data-busqueda="{{ strtolower($usr->nombre_completo . ' ' . $usr->ci . ' ' . ($itemActivo?->numero_item ?? '')) }}"
-                                {{ old('id_custodio') == $usr->id_usuario ? 'selected' : '' }}>
-                            {{ $usr->nombre_completo }} — C.I.: {{ $usr->ci }} ({{$nroItem }})
-                        </option>
-                    @endforeach
-                </select>
-                <span class="error-msg" data-for="id_custodio"></span>
-                <small style="color: #64748b; font-size: 11px;">Escribe en el campo superior para filtrar al instante por C.I., Nombre o Ítem.</small>
-            </label>
+                 <select name="id_custodios[]" id="id_custodios" multiple size="5" style="height: 110px; width: 100%;">
+                     <option value="">— Seleccione custodios de la lista —</option>
+                     @foreach ($usuarios as $usr)
+                         @php
+                             $itemActivo = $usr->items->first();
+                             $nroItem = $itemActivo ? 'Ítem #' . $itemActivo->numero_item : 'Sin ítem';
+                         @endphp
+                         <option value="{{ $usr->id_usuario }}"
+                                 data-busqueda="{{ strtolower($usr->nombre_completo . ' ' . $usr->ci . ' ' . ($itemActivo?->numero_item ?? '')) }}"
+                                 {{ is_array(old('id_custodios')) && in_array($usr->id_usuario, old('id_custodios')) ? 'selected' : '' }}>
+                             {{ $usr->nombre_completo }} — C.I.: {{ $usr->ci }} ({{$nroItem }})
+                         </option>
+                     @endforeach
+                 </select>
+                 <span class="error-msg" data-for="id_custodios"></span>
+                 <small style="color: #64748b; font-size: 11px;">Escribe en el campo superior para filtrar al instante por C.I., Nombre o Ítem.</small>
+             </label>
 
             <div class="section-title">Especificaciones técnicas</div>
 
@@ -263,6 +263,9 @@
             const ambOpt = opt.getAttribute('data-ambiente');
             opt.style.display = (!ambienteId || ambOpt === ambienteId) ? "block" : "none";
         });
+
+        // Auto-seleccionar custodios cuando cambia el ambiente
+        autoSeleccionarCustodiosPorAmbiente(ambienteId);
     }
 
     // ============================================
@@ -270,7 +273,7 @@
     // ============================================
     function filtrarCustodios(texto) {
         const filtro = texto.toLowerCase().trim();
-        const selectCustodio = document.getElementById('id_custodio');
+        const selectCustodio = document.getElementById('id_custodios');
         const opciones = selectCustodio.querySelectorAll('option');
 
         opciones.forEach(opt => {
@@ -278,6 +281,40 @@
             const busqueda = opt.getAttribute('data-busqueda') || "";
             opt.style.display = busqueda.includes(filtro) ? "block" : "none";
         });
+    }
+
+    // ============================================
+    // AUTO-SELECCIONAR CUSTODIOS CUANDO CAMBIA EL AMBIENTE
+    // ============================================
+    function autoSeleccionarCustodiosPorAmbiente(ambienteId) {
+        if (!ambienteId) {
+            // Limpiar selección si no hay ambiente
+            document.getElementById('id_custodios').value = [];
+            return;
+        }
+
+        // Hacer petición fetch para obtener custodios del ambiente
+        fetch('/activos/custodios-por-ambiente/' + ambienteId)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const select = document.getElementById('id_custodios');
+                if (data && data.length > 0) {
+                    const ids = data.map(item => String(item.id));
+                    select.value = ids;
+                } else {
+                    select.value = [];
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching custodios por ambiente:', error);
+                // En caso de error, limpiar selección
+                document.getElementById('id_custodios').value = [];
+            });
     }
 
     // ============================================
@@ -378,11 +415,19 @@
         r.addEventListener('change', () => aplicarTipoBien(r.value));
     });
 
-    // Aplicar al cargar
-    (function() {
-        const checked = document.querySelector('[data-radio-tipo]:checked');
-        aplicarTipoBien(checked ? checked.value : 'ACTIVO_FIJO');
-    })();
+     // Aplicar al cargar
+     (function() {
+         const checked = document.querySelector('[data-radio-tipo]:checked');
+         aplicarTipoBien(checked ? checked.value : 'ACTIVO_FIJO');
+     })();
+
+     // Aplicar filtros iniciales de ambiente y custodios al cargar
+     (function() {
+         const ambienteSelect = document.getElementById('id_ambiente');
+         if (ambienteSelect.value) {
+             filtrarCategoriasPorAmbiente(ambienteSelect.value);
+         }
+     })();
 
     // ============================================
     // VALIDACIÓN AL ENVIAR
@@ -413,20 +458,19 @@
         const tipo = document.querySelector('[data-radio-tipo]:checked')?.value || 'ACTIVO_FIJO';
         const esFijo = tipo === 'ACTIVO_FIJO';
 
-        // Campos base obligatorios
-        const requeridosBase = [
-            { id: 'codigo_activo', msg: 'El código es obligatorio.' },
-            { id: 'cantidad', msg: 'La cantidad es obligatoria.' },
-            { id: 'nombre', msg: 'El nombre es obligatorio.' },
-            { id: 'id_ambiente', msg: 'Selecciona un ambiente.' },
-            { id: 'id_categoria', msg: 'Selecciona una categoría.' },
-            { id: 'id_fuente', msg: 'Selecciona una fuente de financiamiento.' },
-            { id: 'estado_fisico', msg: 'Selecciona un estado físico.' },
-            { id: 'id_custodio', msg: 'Selecciona un custodio responsable.' },
-            { id: 'fecha_adquisicion', msg: 'La fecha de adquisición es obligatoria.' },
-            { id: 'valor_adquisicion', msg: 'El valor es obligatorio.' },
-            { id: 'descripcion', msg: 'La descripción es obligatoria.' },
-        ];
+         // Campos base obligatorios
+         const requeridosBase = [
+             { id: 'codigo_activo', msg: 'El código es obligatorio.' },
+             { id: 'cantidad', msg: 'La cantidad es obligatoria.' },
+             { id: 'nombre', msg: 'El nombre es obligatorio.' },
+             { id: 'id_ambiente', msg: 'Selecciona un ambiente.' },
+             { id: 'id_categoria', msg: 'Selecciona una categoría.' },
+             { id: 'id_fuente', msg: 'Selecciona una fuente de financiamiento.' },
+             { id: 'id_custodios', msg: 'Seleccione al menos un custodio.' },
+             { id: 'fecha_adquisicion', msg: 'La fecha de adquisición es obligatoria.' },
+             { id: 'valor_adquisicion', msg: 'El valor es obligatorio.' },
+             { id: 'descripcion', msg: 'La descripción es obligatoria.' },
+         ];
 
         requeridosBase.forEach(({ id, msg }) => {
             const campo = document.getElementById(id);

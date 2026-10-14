@@ -180,6 +180,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::get('/{id}/tarjeta',     [ActivoController::class, 'tarjeta'])->name('tarjeta');
         Route::get('/{id}/qr',          [ActivoController::class, 'descargarQr'])->name('descargar_qr');
         Route::get('/{id}/etiqueta',    [ActivoController::class, 'etiqueta'])->name('etiqueta');
+        Route::get('/custodios-por-ambiente/{id_ambiente}', [ActivoController::class, 'custodiosPorAmbiente'])->name('custodios.por.ambiente');
     });
 
     // ==========================================================
