@@ -157,14 +157,15 @@ class ActivoFijo extends Model
         return $this->fuente();
     }
 
-    public function custodio()
+    public function custodios()
     {
-        return $this->belongsTo(User::class, 'id_custodio', 'id_usuario');
+        return $this->belongsToMany(User::class, 'activo_custodio', 'id_activo', 'id_usuario')->withTimestamps();
     }
 
     public function custodioActual()
     {
-        return $this->custodio();
+        // Para compatibilidad hacia atrás, devolvemos el primer custodio o null
+        return $this->custodios->first();
     }
 
     public function item()

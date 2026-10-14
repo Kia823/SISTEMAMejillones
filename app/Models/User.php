@@ -336,7 +336,7 @@ class User extends Authenticatable
 
     public function activosCustodiados()
     {
-        return $this->hasMany(ActivoFijo::class, 'id_custodio', 'id_usuario');
+        return $this->belongsToMany(ActivoFijo::class, 'activo_custodio', 'id_usuario', 'id_activo')->withTimestamps();
     }
 
     /**

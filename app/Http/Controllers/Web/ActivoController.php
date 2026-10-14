@@ -142,29 +142,33 @@ class ActivoController extends Controller
             'id_ambiente'       => 'required|exists:ambientes,id_ambiente',
             'id_categoria'      => 'required|exists:categorias,id_categoria',
             'id_fuente'         => 'required|exists:fuentes_financiamiento,id_fuente',
-            'id_custodio'       => 'required|exists:usuarios,id_usuario',
+            'id_custodios'      => 'required|array',
+            'id_custodios.*'    => 'exists:usuarios,id_usuario',
             'estado_fisico'     => 'required|in:B,R,M,FF',
             'fecha_adquisicion' => 'required|date',
             'valor_adquisicion' => 'required|numeric|min:0',
             'imagen'            => 'nullable|image|max:5120',
             'imagen_lateral'    => 'nullable|image|max:5120',
             'imagen_detalle'    => 'nullable|image|max:5120',
-        ], [
-            'codigo_activo.required' => 'El código del activo es obligatorio.',
-            'codigo_activo.unique'   => 'Este código de activo ya está registrado.',
-            'nombre.required'        => 'El nombre del activo es obligatorio.',
-            'marca.required'         => 'La marca es obligatoria para activos fijos.',
-            'modelo.required'        => 'El modelo es obligatorio para activos fijos.',
-            'numero_serie.required'  => 'El número de serie es obligatorio para activos fijos.',
-            'id_ambiente.required'   => 'El ambiente es obligatorio.',
-            'id_categoria.required'  => 'La categoría es obligatoria.',
-            'id_fuente.required'     => 'La fuente de financiamiento es obligatoria.',
-            'id_custodio.required'   => 'El custodio responsable es obligatorio.',
-        ]);
+            ], [
+                'codigo_activo.required' => 'El código del activo es obligatorio.',
+                'codigo_activo.unique'   => 'Este código de activo ya está registrado.',
+                'nombre.required'        => 'El nombre del activo es obligatorio.',
+                'marca.required'         => 'La marca es obligatoria para activos fijos.',
+                'modelo.required'        => 'El modelo es obligatorio para activos fijos.',
+                'numero_serie.required'  => 'El número de serie es obligatorio para activos fijos.',
+                'id_ambiente.required'   => 'El ambiente es obligatorio.',
+                'id_categoria.required'  => 'La categoría es obligatoria.',
+                'id_fuente.required'     => 'La fuente de financiamiento es obligatoria.',
+                'id_custodios.required'  => 'Los custodios responsables son obligatorios.',
+                'id_custodios.*.exists'  => 'Uno de los custodios seleccionados no existe.',
+            ]);
 
         $data['tipo_bien'] = $tipoBien;
         $cantidad = max(1, min(100, (int) $request->input('cantidad', 1)));
-        $data['id_item'] = $this->itemDelCustodio($data['id_custodio'] ?? null);
+        // Usar el primer custodio para determinar el ítem (manteniendo compatibilidad con lógica existente)
+        $primerCustodio = $request->input('id_custodios')[0] ?? null;
+        $data['id_item'] = $this->itemDelCustodio($primerCustodio);
 
         $imagenPath        = $request->hasFile('imagen') ? $request->file('imagen')->store('activos', 'public') : null;
         $imagenLateralPath = $request->hasFile('imagen_lateral') ? $request->file('imagen_lateral')->store('activos', 'public') : null;
@@ -173,33 +177,38 @@ class ActivoController extends Controller
         $creados    = 0;
         $codigoBase = $data['codigo_activo'];
 
-        DB::transaction(function () use (&$creados, $data, $cantidad, $codigoBase, $imagenPath, $imagenLateralPath, $imagenDetallePath) {
-            for ($i = 0; $i < $cantidad; $i++) {
-                $item = $data;
-                $item['codigo_activo'] = ($cantidad > 1)
-                    ? $codigoBase . '-' . str_pad($i + 1, 2, '0', STR_PAD_LEFT)
-                    : $codigoBase;
+         DB::transaction(function () use (&$creados, $data, $cantidad, $codigoBase, $imagenPath, $imagenLateralPath, $imagenDetallePath) {
+             for ($i = 0; $i < $cantidad; $i++) {
+                 $item = $data;
+                 // Remover campos que no pertenecen a la tabla activos_fijos
+                 unset($item['id_custodios']);
+                 $item['codigo_activo'] = ($cantidad > 1)
+                     ? $codigoBase . '-' . str_pad($i + 1, 2, '0', STR_PAD_LEFT)
+                     : $codigoBase;
 
-                if (ActivoFijo::where('codigo_activo', $item['codigo_activo'])->exists()) {
-                    continue;
-                }
+                 if (ActivoFijo::where('codigo_activo', $item['codigo_activo'])->exists()) {
+                     continue;
+                 }
 
-                if ($imagenPath) $item['imagen'] = $imagenPath;
-                if ($imagenLateralPath) $item['imagen_lateral'] = $imagenLateralPath;
-                if ($imagenDetallePath) $item['imagen_detalle'] = $imagenDetallePath;
+                 if ($imagenPath) $item['imagen'] = $imagenPath;
+                 if ($imagenLateralPath) $item['imagen_lateral'] = $imagenLateralPath;
+                 if ($imagenDetallePath) $item['imagen_detalle'] = $imagenDetallePath;
 
-                $activo = ActivoFijo::create($item);
+                 $activo = ActivoFijo::create($item);
 
-                try {
-                    $qrData = $this->generarQRParaActivo($item['codigo_activo']);
-                    $activo->update($qrData);
-                } catch (\Throwable $e) {
-                    Log::warning('Error generando QR: ' . $e->getMessage());
-                }
+                 // Asignar los custodios seleccionados a este activo
+                 $activo->custodios()->attach($request->input('id_custodios'));
 
-                $creados++;
-            }
-        });
+                 try {
+                     $qrData = $this->generarQRParaActivo($item['codigo_activo']);
+                     $activo->update($qrData);
+                 } catch (\Throwable $e) {
+                     Log::warning('Error generando QR: ' . $e->getMessage());
+                 }
+
+                 $creados++;
+             }
+         });
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => "¡{$creados} activo(s) registrado(s) correctamente!"]);
@@ -313,7 +322,8 @@ class ActivoController extends Controller
             'id_ambiente'       => 'required|exists:ambientes,id_ambiente',
             'id_categoria'      => 'required|exists:categorias,id_categoria',
             'id_fuente'         => 'required|exists:fuentes_financiamiento,id_fuente',
-            'id_custodio'       => 'required|exists:usuarios,id_usuario',
+            'id_custodios'      => 'required|array',
+            'id_custodios.*'    => 'exists:usuarios,id_usuario',
             'estado_fisico'     => 'required|in:B,R,M,FF',
             'fecha_adquisicion' => 'required|date',
             'valor_adquisicion' => 'required|numeric|min:0',
@@ -321,7 +331,9 @@ class ActivoController extends Controller
         ]);
 
         $data['tipo_bien'] = $tipoBien;
-        $data['id_item'] = $this->itemDelCustodio($data['id_custodio'] ?? null);
+        // Usar el primer custodio para determinar el ítem (manteniendo compatibilidad con lógica existente)
+        $primerCustodio = $request->input('id_custodios')[0] ?? null;
+        $data['id_item'] = $this->itemDelCustodio($primerCustodio);
 
         if ($request->hasFile('imagen')) {
             if ($activo->imagen && Storage::disk('public')->exists($activo->imagen)) {
@@ -343,7 +355,14 @@ class ActivoController extends Controller
             }
         }
 
-        $activo->update($data);
+        // Eliminar campos que no pertenecen a la tabla activos_fijos antes de actualizar
+        $dataParaActualizar = $data;
+        unset($dataParaActualizar['id_custodios']);
+
+        $activo->update($dataParaActualizar);
+
+        // Sincronizar los custodios seleccionados
+        $activo->custodios()->sync($request->input('id_custodios'));
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Activo actualizado correctamente.']);
@@ -412,7 +431,7 @@ class ActivoController extends Controller
 
         $codigoLimpio = trim($codigoLimpio);
 
-        $activo = ActivoFijo::with(['custodio', 'ambiente.carrera', 'categoria'])
+        $activo = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente'])
             ->paraUsuario($user)
             ->where('estado_registro', '!=', 'BAJA')
             ->where(function ($q) use ($codigoLimpio) {
@@ -455,8 +474,17 @@ class ActivoController extends Controller
                 'carrera' => $activo->ambiente?->carrera?->nombre,
                 'id_categoria' => $activo->id_categoria,
                 'categoria' => $activo->categoria?->nombre,
-                'id_custodio' => $activo->id_custodio,
-                'custodio' => $activo->custodio?->nombre_completo,
+                // Para compatibilidad hacia atrás, devolvemos el primer custodio o null
+                'id_custodio' => $activo->custodios->first()?->id_usuario ?? null,
+                'custodio' => $activo->custodios->first()?->nombre_completo ?? null,
+                // Nuevos campos para múltiples custodios
+                'custodios' => $activo->custodios->map(function ($custodio) {
+                    return [
+                        'id' => $custodio->id_usuario,
+                        'nombre' => $custodio->nombre_completo,
+                        'ci' => $custodio->ci,
+                    ];
+                })->toArray(),
             ],
         ]);
     }
@@ -480,7 +508,7 @@ class ActivoController extends Controller
         $categoria = null;
         $tipoBien  = $this->tipoBienExportado($request);
 
-        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente', 'custodio', 'item'])
+        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente'])
             ->where('estado_registro', '!=', 'BAJA')
             ->tipoBien($tipoBien);
 
@@ -518,7 +546,7 @@ class ActivoController extends Controller
         $categoria = null;
         $tipoBien  = $this->tipoBienExportado($request);
 
-        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente', 'custodio', 'item'])
+        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente'])
             ->where('estado_registro', '!=', 'BAJA')
             ->tipoBien($tipoBien);
 
@@ -622,7 +650,7 @@ class ActivoController extends Controller
             ->where('id_categoria', $categoria->id_categoria)
             ->where('estado_registro', '!=', 'BAJA')
             ->where('nombre', 'LIKE', "%{$nombreDecoded}%")
-            ->with(['ambiente', 'custodio', 'fuente'])
+            ->with(['ambiente', 'fuente'])
             ->orderBy('codigo_activo')
             ->get();
 
@@ -669,7 +697,7 @@ class ActivoController extends Controller
     // ============================================================
     public function noActivos(Request $request)
     {
-        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente', 'custodio'])
+        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente'])
             ->where('tipo_bien', 'NO_ACTIVO')
             ->where('estado_registro', '!=', 'BAJA');
 
@@ -706,7 +734,7 @@ class ActivoController extends Controller
     {
         $user = Auth::user();
 
-        $query = \App\Models\ActivoFijo::with(['categoria', 'ambiente.carrera', 'custodio'])
+        $query = \App\Models\ActivoFijo::with(['categoria', 'ambiente.carrera'])
             ->paraUsuario($user)
             ->where('estado_registro', 'BAJA');
 
