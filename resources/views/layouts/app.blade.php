@@ -322,7 +322,7 @@
             @forelse($__carreras as $car)
                 <a href="{{ route('carreras.show', $car->id_carrera) }}"
                     class="nav-item {{ request()->routeIs('carreras.show') && request()->route('id_carrera') == $car->id_carrera ? 'active' : '' }}">
-                    Ã°Å¸Å½â€œ {{ $car->nombre }}
+                    🎓 {{ $car->nombre }}
                 </a>
             @empty
                 <div style="padding: 8px 14px; font-size: 12px; color: #64748b; font-style: italic;">
@@ -363,7 +363,7 @@
             @if ($__user->puedeSolicitarBajaOTransferencia())
                 <a href="{{ route('actas.baja.index') }}"
                     class="nav-item {{ request()->routeIs('actas.baja.*') ? 'active' : '' }}">
-                    Ã°Å¸â€œâ€ž Actas de Baja
+                    📄 Actas de Baja
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -372,7 +372,7 @@
 
                 <a href="{{ route('actas.transferencia.index') }}"
                     class="nav-item {{ request()->routeIs('actas.transferencia.*') ? 'active' : '' }}">
-                    Ã°Å¸â€œâ€ž Transferencias
+                    📄 Transferencias
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -510,7 +510,7 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{-- Ã°Å¸Å½â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
+    {{-- 🎓ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
     {{-- ============================================================ --}}
     @if (session('login_success'))
         <div id="welcome-modal"
@@ -721,7 +721,7 @@
         });
 
         // ============================================================
-        // Ã°Å¸Å½â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° MODAL DE BIENVENIDA
+        // 🎓ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° MODAL DE BIENVENIDA
         // ============================================================
         @if (session('login_success'))
             (function() {
