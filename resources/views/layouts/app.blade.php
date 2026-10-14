@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="SISActivos - Sistema de Control y GestiÃ³n de Activos Fijos">
+    <meta name="description" content="SISActivos - Sistema de Control y Gestión de Activos Fijos">
     <meta name="theme-color" content="#2563eb">
     <link rel="manifest" href="/manifest.json">
-    <title>@yield('title', 'SISActivos') - Sistema de Control y GestiÃ³n</title>
+    <title>@yield('title', 'SISActivos') - Sistema de Control y Gestión</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    {{-- Cola local: permite escanear y registrar sin conexiÃ³n --}}
+    {{-- Cola local: permite escanear y registrar sin conexión --}}
     @vite(['resources/js/offline.js'])
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -287,7 +287,7 @@
     {{-- Barra de carga global --}}
     <div class="loading-bar" id="loadingBar"></div>
 
-    {{-- Overlay para menÃº mÃ³vil --}}
+    {{-- Overlay para menú móvil --}}
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     {{-- ============ SIDEBAR ============ --}}
@@ -303,7 +303,7 @@
 
             {{-- INICIO --}}
             <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard*') ? 'active' : '' }}">
-                ðŸ  Inicio
+                🏠 Inicio
             </a>
 
             {{-- CARRERAS --}}
@@ -336,7 +336,7 @@
             @if ($__user->puedeRegistrarVerificacion())
                 <a href="{{ route('verificaciones.index') }}"
                     class="nav-item {{ request()->routeIs('verificaciones.*') && !request()->routeIs('verificaciones-aprobacion.*') ? 'active' : '' }}">
-                    ðŸ” VerificaciÃ³n FÃ­sica
+                    ðŸ” Verificación FÃ­sica
                     <span id="offline-pendientes"
                         style="display: none; background: #f59e0b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;"
                         title="Verificaciones guardadas en este equipo, pendientes de enviar">0</span>
@@ -409,7 +409,7 @@
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera())
                 <a href="{{ route('actas.liberacion.index') }}"
                     class="nav-item {{ request()->routeIs('actas.liberacion.*') ? 'active' : '' }}">
-                    ðŸšª LiberaciÃ³n
+                    ðŸšª Liberación
 
             @endif
 
@@ -426,13 +426,13 @@
 
                 <a href="{{ route('configuracion.index') }}"
                     class="nav-item {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
-                    ⚙️ ConfiguraciÃ³n
+                    ⚙️ Configuración
 
             @endif
 
             <form action="{{ route('logout') }}" method="POST" class="logout-form">
                 @csrf
-                <button type="submit">Cerrar sesiÃ³n</button>
+                <button type="submit">Cerrar sesión</button>
             </form>
         @endauth
     </aside>
@@ -446,7 +446,7 @@
 
             <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px; max-width: 800px;">
 
-                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menÃº">
+                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menú">
                     â˜°
                 </button>
 
@@ -464,7 +464,7 @@
                     style="display: flex; align-items: center; gap: 8px; flex: 1; margin: 0;">
                     <div style="position: relative; flex: 1;">
                         <input type="text" name="buscar" value="{{ request('buscar') }}"
-                            placeholder="Buscar activo por cÃ³digo, nombre, serie, marca..." autocomplete="off"
+                            placeholder="Buscar activo por código, nombre, serie, marca..." autocomplete="off"
                             style="width: 100%; height: 42px; padding: 0 42px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; background: #f8fafc; color: #0f172a; transition: all 0.2s ease;"
                             onfocus="this.style.background='#ffffff'; this.style.borderColor='#2563eb';"
                             onblur="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';">
@@ -483,7 +483,7 @@
             <div style="display: flex; align-items: center; gap: 16px;">
                 @auth
                     @if (auth()->user()->esAdmin())
-                        <a href="{{ route('usuarios.index') }}" title="GestiÃ³n de Usuarios"
+                        <a href="{{ route('usuarios.index') }}" title="Gestión de Usuarios"
                             style="width: 42px; height: 42px; background-color: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15); transition: all 0.2s ease;"
                             onmouseover="this.style.backgroundColor='#2563eb'; this.style.color='#fff';"
                             onmouseout="this.style.backgroundColor='#eff6ff'; this.style.color='#2563eb';">
@@ -524,7 +524,7 @@
                     style="height: 8px; background: linear-gradient(90deg, #34d399, #14b8a6, #34d399); animation: pulse 2s ease-in-out infinite;">
                 </div>
 
-                {{-- BotÃ³n cerrar --}}
+                {{-- Botón cerrar --}}
                 <button type="button" onclick="cerrarModalBienvenida()"
                     style="position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f1f5f9; color: #475569; border: none; cursor: pointer; z-index: 10; transition: all 0.2s;"
                     onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
@@ -557,7 +557,7 @@
                         Â¡Acceso Correcto!
                     </h2>
                     <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">
-                        Has iniciado sesiÃ³n exitosamente
+                        Has iniciado sesión exitosamente
                     </p>
 
                     {{-- Card del usuario --}}
@@ -645,7 +645,7 @@
         document.getElementById('sidebarOverlay')?.addEventListener('click', toggleSidebar);
 
         // ============================================================
-        // SWEET ALERT â€” Mensajes de sesiÃ³n
+        // SWEET ALERT â€” Mensajes de sesión
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             @if (session('status'))
@@ -676,14 +676,14 @@
             @if (session('warning'))
                 Swal.fire({
                     icon: 'warning',
-                    title: 'AtenciÃ³n',
+                    title: 'Atención',
                     text: @json(session('warning'))
                 });
             @endif
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
-                    title: 'Errores de validaciÃ³n',
+                    title: 'Errores de validación',
                     html: `<ul style="text-align:left; font-size:13px;">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>`
                 });
             @endif
@@ -694,8 +694,8 @@
         // ============================================================
         function confirmDelete(formId) {
             Swal.fire({
-                title: 'Â¿EstÃ¡s seguro de eliminar?',
-                text: 'Â¡Esta acciÃ³n no se puede deshacer!',
+                title: 'Â¿Estás seguro de eliminar?',
+                text: 'Â¡Esta acción no se puede deshacer!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
@@ -741,7 +741,7 @@
                     console.error('Error al reproducir audio:', e);
                 }
 
-                // â­ Mostrar modal con animaciÃ³n
+                // â­ Mostrar modal con animación
                 requestAnimationFrame(() => {
                     modal.style.opacity = '1';
                     card.style.transform = 'scale(1)';
@@ -760,7 +760,7 @@
                     cerrarModalBienvenida();
                 }, DURACION_MS);
 
-                // â­ FunciÃ³n global para cerrar
+                // â­ Función global para cerrar
                 window.cerrarModalBienvenida = function() {
                     clearTimeout(timeoutId);
                     modal.style.opacity = '0';
@@ -803,6 +803,7 @@
 </body>
 
 </html>
+
 
 
 
