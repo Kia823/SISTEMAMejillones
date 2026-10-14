@@ -206,7 +206,7 @@
 
         // 1. CUSTODIOS del ambiente (los que tienen activos asignados en este ambiente)
         $custodios = \App\Models\User::whereHas('activosCustodiados', function($q) use ($ambiente) {
-            $q->where('activos_fijos.id_ambiente', $ambiente->id_ambiente);
+            $q->where('id_ambiente', $ambiente->id_ambiente);
         })
         ->where('estado', 'ACTIVO')
         ->distinct()
@@ -233,7 +233,7 @@
 
         // 3. DOCENTES del ambiente (si los hay)
         $docentes = \App\Models\User::whereHas('activosCustodiados', function($q) use ($ambiente) {
-            $q->where('activos_fijos.id_ambiente', $ambiente->id_ambiente);
+            $q->where('id_ambiente', $ambiente->id_ambiente);
         })
         ->whereIn('rol', ['DOCENTE', 'DOCENTE_CUSTODIO'])
         ->where('estado', 'ACTIVO')
