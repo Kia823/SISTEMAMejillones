@@ -435,7 +435,7 @@ class ReporteController extends Controller
     public function porAmbientePdf($id_ambiente)
     {
         $ambiente = $this->ambienteVisible($id_ambiente);
-        // Reutiliza la misma lÃ³gica de consulta por ambiente
+        // Reutiliza la misma lÃƒÂ³gica de consulta por ambiente
         return $this->porAmbiente($id_ambiente); // o genera PDF directamente
     }
 
@@ -448,7 +448,7 @@ class ReporteController extends Controller
     }
 
     // ============================================================
-    // 3. MÃ‰TODOS DINÃMICOS PARA REPORTES (DESDE EL CENTRO DE REPORTES)
+    // 3. MÃƒâ€°TODOS DINÃƒÂMICOS PARA REPORTES (DESDE EL CENTRO DE REPORTES)
     // ============================================================
     public function pdf(Request $request)
     {
