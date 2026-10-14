@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -256,7 +256,7 @@
             }
         }
 
-        /* ============ ANIMACIN DEL ÍCONO DE BIENVENIDA ============ */
+        /* ============ ANIMACIN DEL ÃCONO DE BIENVENIDA ============ */
         @keyframes successPop {
             0% {
                 transform: scale(0) rotate(-180deg);
@@ -287,14 +287,14 @@
     {{-- Barra de carga global --}}
     <div class="loading-bar" id="loadingBar"></div>
 
-    {{-- Overlay para menú móvil --}}
+    {{-- Overlay para menÃº móvil --}}
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     {{-- ============ SIDEBAR ============ --}}
     <aside class="sidebar" id="sidebar">
         <div class="brand">
             <span
-                style="display:inline-flex;width:32px;height:32px;background:#2563eb;border-radius:8px;align-items:center;justify-content:center;font-size:16px;">📦</span>
+                style="display:inline-flex;width:32px;height:32px;background:#2563eb;border-radius:8px;align-items:center;justify-content:center;font-size:16px;">ðŸ“¦</span>
             SISActivos
         </div>
 
@@ -303,7 +303,7 @@
 
             {{-- INICIO --}}
             <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard*') ? 'active' : '' }}">
-                🏠 Inicio
+                ðŸ  Inicio
             </a>
 
             {{-- CARRERAS --}}
@@ -322,7 +322,7 @@
             @forelse($__carreras as $car)
                 <a href="{{ route('carreras.show', $car->id_carrera) }}"
                     class="nav-item {{ request()->routeIs('carreras.show') && request()->route('id_carrera') == $car->id_carrera ? 'active' : '' }}">
-                    🎓 {{ $car->nombre }}
+                    ðŸŽ“ {{ $car->nombre }}
                 </a>
             @empty
                 <div style="padding: 8px 14px; font-size: 12px; color: #64748b; font-style: italic;">
@@ -352,7 +352,7 @@
                 @endphp
                 <a href="{{ route('aprobaciones.index') }}"
                     class="nav-item {{ request()->routeIs('aprobaciones.*') ? 'active' : '' }}">
-                    ✅ Aprobaciones
+                    âœ… Aprobaciones
                     @if ($__pendientes > 0)
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">{{ $__pendientes }}</span>
@@ -363,7 +363,7 @@
             @if ($__user->puedeSolicitarBajaOTransferencia())
                 <a href="{{ route('actas.baja.index') }}"
                     class="nav-item {{ request()->routeIs('actas.baja.*') ? 'active' : '' }}">
-                    📄 Actas de Baja
+                    ðŸ“„ Actas de Baja
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -372,7 +372,7 @@
 
                 <a href="{{ route('actas.transferencia.index') }}"
                     class="nav-item {{ request()->routeIs('actas.transferencia.*') ? 'active' : '' }}">
-                    📄 Transferencias
+                    ðŸ“„ Transferencias
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -381,35 +381,35 @@
             @endif
             <a href="{{ route('categorias.index') }}"
                 class="nav-item {{ request()->routeIs('categorias.*') ? 'active' : '' }}">
-                📦 Categoras
+                ðŸ“¦ Categoras
             </a>
             <a href="{{ route('activos.index') }}"
                 class="nav-item {{ request()->routeIs('activos.*') && !request()->routeIs('activos.no-activos') ? 'active' : '' }}">
-                📦 Activos
+                ðŸ“¦ Activos
             </a>
 
             {{--  NUEVO: No Activos --}}
             <a href="{{ route('activos.noActivos') }}"
                 class="nav-item {{ request()->routeIs('activos.no-activos') ? 'active' : '' }}">
-                🔍š No Activos
+                🔍Å¡ No Activos
             </a>
             <a href="{{ route('activos.baja') }}"
                 class="nav-item {{ request()->routeIs('activos.baja') ? 'active' : '' }}">
-                🔍—‘ï Activos de Baja
+                🔍â€”â€˜Ã¯ Activos de Baja
             </a>
             <a href="{{ route('items.index') }}" class="nav-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
-                🏷️ Ítems
+                ðŸ·ï¸ Ãtems
             </a>
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera() || $__user->esCustodio())
             <a href="{{ route('reportes.index') }}" class="nav-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-                📊 Reportes
+                ðŸ“Š Reportes
             </a>
             @endif
 
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera())
                 <a href="{{ route('actas.liberacion.index') }}"
                     class="nav-item {{ request()->routeIs('actas.liberacion.*') ? 'active' : '' }}">
-                    🔍š Liberación
+                    🔍Å¡ Liberación
 
             @endif
 
@@ -421,12 +421,12 @@
 
                 <a href="{{ route('backup.index') }}"
                     class="nav-item {{ request()->routeIs('backup.*') ? 'active' : '' }}">
-                    🔍’¾ Copias de Seguridad
+                    🔍â€™Â¾ Copias de Seguridad
                 </a>
 
                 <a href="{{ route('configuracion.index') }}"
                     class="nav-item {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
-                    ⚙️ Configuración
+                    âš™ï¸ Configuración
 
             @endif
 
@@ -446,16 +446,16 @@
 
             <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px; max-width: 800px;">
 
-                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menú">
+                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menÃº">
                     
                 </button>
 
-                {{--  UN šNICO BOTN "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
+                {{--  UN Å¡NICO BOTN "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
                 @if (!request()->is('/') && !request()->is('dashboard'))
                     <button type="button" onclick="history.back()" title="Volver"
                         style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 16px; border-radius: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; text-decoration: none; transition: all 0.2s ease;"
                         onmouseover="this.style.background='#dbeafe';" onmouseout="this.style.background='#eff6ff';">
-                        <span style="font-size: 16px;">†</span>
+                        <span style="font-size: 16px;">â€ </span>
                         <span>Volver</span>
                     </button>
                 @endif
@@ -487,7 +487,7 @@
                             style="width: 42px; height: 42px; background-color: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15); transition: all 0.2s ease;"
                             onmouseover="this.style.backgroundColor='#2563eb'; this.style.color='#fff';"
                             onmouseout="this.style.backgroundColor='#eff6ff'; this.style.color='#2563eb';">
-                            🔍‘
+                            🔍â€˜
 
                     @endif
 
@@ -510,7 +510,7 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{-- 🎓‰ MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
+    {{-- ðŸŽ“â€° MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
     {{-- ============================================================ --}}
     @if (session('login_success'))
         <div id="welcome-modal"
@@ -537,7 +537,7 @@
                 {{-- Contenido principal --}}
                 <div style="padding: 40px 32px 24px; text-align: center;">
 
-                    {{-- Ícono animado --}}
+                    {{-- Ãcono animado --}}
                     <div
                         style="position: relative; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
                         <span
@@ -554,7 +554,7 @@
 
                     {{-- Ttulo --}}
                     <h2 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-                        ¡Acceso Correcto!
+                        Â¡Acceso Correcto!
                     </h2>
                     <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">
                         Has iniciado sesión exitosamente
@@ -633,7 +633,7 @@
         })();
 
         // ============================================================
-        // MENš MVIL
+        // MENÅ¡ MVIL
         // ============================================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -651,7 +651,7 @@
             @if (session('status'))
                 Swal.fire({
                     icon: 'success',
-                    title: '¡‰xito!',
+                    title: 'Â¡â€°xito!',
                     text: @json(session('status')),
                     timer: 3000,
                     showConfirmButton: false
@@ -660,7 +660,7 @@
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
-                    title: '¡‰xito!',
+                    title: 'Â¡â€°xito!',
                     text: @json(session('success')),
                     timer: 3000,
                     showConfirmButton: false
@@ -694,8 +694,8 @@
         // ============================================================
         function confirmDelete(formId) {
             Swal.fire({
-                title: '¿Estás seguro de eliminar?',
-                text: '¡Esta acción no se puede deshacer!',
+                title: 'Â¿Estás seguro de eliminar?',
+                text: 'Â¡Esta acción no se puede deshacer!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
@@ -721,7 +721,7 @@
         });
 
         // ============================================================
-        // 🎓‰ MODAL DE BIENVENIDA
+        // ðŸŽ“â€° MODAL DE BIENVENIDA
         // ============================================================
         @if (session('login_success'))
             (function() {
@@ -736,7 +736,7 @@
                 try {
                     const audio = new Audio("{{ asset('audios/bienvenido.mp3') }}");
                     audio.volume = 0.7;
-                    audio.play().catch(e => console.log('🔍‡ Audio bloqueado:', e.message));
+                    audio.play().catch(e => console.log('🔍â€¡ Audio bloqueado:', e.message));
                 } catch (e) {
                     console.error('Error al reproducir audio:', e);
                 }
@@ -785,7 +785,7 @@
                     }
                 });
 
-                //  LIMPIAR EL FLAG DESPU‰S DE MOSTRAR EL MODAL 
+                //  LIMPIAR EL FLAG DESPUâ€°S DE MOSTRAR EL MODAL 
                 setTimeout(() => {
                     fetch('{{ route('login.clear-welcome') }}', {
                         method: 'POST',
@@ -803,6 +803,7 @@
 </body>
 
 </html>
+
 
 
 
