@@ -46,7 +46,7 @@ class ActivoController extends Controller
     // ==========================================
     public function index(Request $request)
     {
-        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente', 'custodio'])
+        $query = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente'])
             ->where('estado_registro', '!=', 'BAJA'); // ⭐ Oculta los dados de baja del inventario general
 
         if ($request->filled('buscar')) {
@@ -431,7 +431,7 @@ class ActivoController extends Controller
 
         $codigoLimpio = trim($codigoLimpio);
 
-        $activo = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente'])
+        $activo = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente', 'custodios'])
             ->paraUsuario($user)
             ->where('estado_registro', '!=', 'BAJA')
             ->where(function ($q) use ($codigoLimpio) {
@@ -449,7 +449,7 @@ class ActivoController extends Controller
 
         $ambienteId = $request->query('ambiente_id');
         $esDelAmbiente = $ambienteId ? $activo->id_ambiente == $ambienteId : true;
-        $esMio = (int) $activo->id_custodio === (int) $user->id_usuario;
+        $esMio = $activo->custodios->contains('id_usuario', $user->id_usuario);
 
         return response()->json([
             'success' => true,
