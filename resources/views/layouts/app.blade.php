@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="SISActivos - Sistema de Control y GestiÃƒÆ’Ã‚ de Activos Fijos">
+    <meta name="description" content="SISActivos - Sistema de Control y Gestión de Activos Fijos">
     <meta name="theme-color" content="#2563eb">
     <link rel="manifest" href="/manifest.json">
-    <title>@yield('title', 'SISActivos') - Sistema de Control y GestiÃƒÆ’Ã‚
+    <title>@yield('title', 'SISActivos') - Sistema de Control y Gestión</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    {{-- Cola local: permite escanear y registrar sin conexiÃƒÆ’Ã‚ --}}
+    {{-- Cola local: permite escanear y registrar sin conexión --}}
     @vite(['resources/js/offline.js'])
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -83,6 +83,17 @@
             gap: 8px;
         }
 
+        .brand-icon {
+            display: inline-flex;
+            width: 32px;
+            height: 32px;
+            background: #2563eb;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
         .menu-category {
             font-size: 11px;
             text-transform: uppercase;
@@ -95,6 +106,7 @@
         .nav-item {
             display: flex;
             align-items: center;
+            gap: 10px;
             padding: 10px 14px;
             color: #d1d5db;
             text-decoration: none;
@@ -103,6 +115,10 @@
             border-radius: 10px;
             margin-bottom: 4px;
             transition: all 0.2s ease;
+        }
+
+        .nav-item svg {
+            flex-shrink: 0;
         }
 
         .nav-item:hover {
@@ -164,7 +180,7 @@
             padding: 24px 32px 32px;
         }
 
-        /* ============ BOTN MOBILE MENU ============ */
+        /* ============ BOTÓN MOBILE MENU ============ */
         .mobile-menu-toggle {
             display: none;
             width: 42px;
@@ -256,7 +272,7 @@
             }
         }
 
-        /* ============ ANIMACIN DEL ÃƒÆ’Ã† DE BIENVENIDA ============ */
+        /* ============ ANIMACIÓN DEL ICONO DE BIENVENIDA ============ */
         @keyframes successPop {
             0% {
                 transform: scale(0) rotate(-180deg);
@@ -287,14 +303,18 @@
     {{-- Barra de carga global --}}
     <div class="loading-bar" id="loadingBar"></div>
 
-    {{-- Overlay para menÃƒÆ’Ã† mÃƒÆ’Ã‚ --}}
+    {{-- Overlay para menú móvil --}}
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     {{-- ============ SIDEBAR ============ --}}
     <aside class="sidebar" id="sidebar">
         <div class="brand">
-            <span
-                style="display:inline-flex;width:32px;height:32px;background:#2563eb;border-radius:8px;align-items:center;justify-content:center;font-size:16px;">📦</span>
+            <span class="brand-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+            </span>
             SISActivos
         </div>
 
@@ -303,7 +323,11 @@
 
             {{-- INICIO --}}
             <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard*') ? 'active' : '' }}">
-                🏠 Inicio
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Inicio
             </a>
 
             {{-- CARRERAS --}}
@@ -322,7 +346,13 @@
             @forelse($__carreras as $car)
                 <a href="{{ route('carreras.show', $car->id_carrera) }}"
                     class="nav-item {{ request()->routeIs('carreras.show') && request()->route('id_carrera') == $car->id_carrera ? 'active' : '' }}">
-                     {{ $car->nombre }}
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    </svg>
+                    {{ $car->nombre }}
                 </a>
             @empty
                 <div style="padding: 8px 14px; font-size: 12px; color: #64748b; font-style: italic;">
@@ -336,11 +366,15 @@
             @if ($__user->puedeRegistrarVerificacion())
                 <a href="{{ route('verificaciones.index') }}"
                     class="nav-item {{ request()->routeIs('verificaciones.*') && !request()->routeIs('verificaciones-aprobacion.*') ? 'active' : '' }}">
-                    Ãƒ VerificaciÃƒÆ’Ã‚ FÃƒÆ’Ã‚
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Verificación Física
                     <span id="offline-pendientes"
                         style="display: none; background: #f59e0b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;"
                         title="Verificaciones guardadas en este equipo, pendientes de enviar">0</span>
-
+                </a>
             @endif
 
             @if ($__user->puedeAprobar())
@@ -352,87 +386,141 @@
                 @endphp
                 <a href="{{ route('aprobaciones.index') }}"
                     class="nav-item {{ request()->routeIs('aprobaciones.*') ? 'active' : '' }}">
-                    ÃƒÆ’Ã‚ Aprobaciones
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Aprobaciones
                     @if ($__pendientes > 0)
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">{{ $__pendientes }}</span>
                     @endif
-
+                </a>
             @endif
 
             @if ($__user->puedeSolicitarBajaOTransferencia())
                 <a href="{{ route('actas.baja.index') }}"
                     class="nav-item {{ request()->routeIs('actas.baja.*') ? 'active' : '' }}">
-                     Actas de Baja
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Actas de Baja
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
                     @endif
-
+                </a>
 
                 <a href="{{ route('actas.transferencia.index') }}"
                     class="nav-item {{ request()->routeIs('actas.transferencia.*') ? 'active' : '' }}">
-                     Transferencias
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    Transferencias
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
                     @endif
-
+                </a>
             @endif
+
             <a href="{{ route('categorias.index') }}"
                 class="nav-item {{ request()->routeIs('categorias.*') ? 'active' : '' }}">
-                📦 Categoras
-            </a>
-            <a href="{{ route('activos.index') }}"
-                class="nav-item {{ request()->routeIs('activos.*') && !request()->routeIs('activos.no-activos') ? 'active' : '' }}">
-                📦 Activos
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Categorías
             </a>
 
-            {{--  NUEVO: No Activos --}}
+            <a href="{{ route('activos.index') }}"
+                class="nav-item {{ request()->routeIs('activos.*') && !request()->routeIs('activos.no-activos') ? 'active' : '' }}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                Activos
+            </a>
+
+            {{-- No Activos --}}
             <a href="{{ route('activos.noActivos') }}"
                 class="nav-item {{ request()->routeIs('activos.no-activos') ? 'active' : '' }}">
-                Ãƒ No Activos
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                No Activos
             </a>
+
             <a href="{{ route('activos.baja') }}"
                 class="nav-item {{ request()->routeIs('activos.baja') ? 'active' : '' }}">
-                Ãƒ Activos de Baja
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Activos de Baja
             </a>
+
             <a href="{{ route('items.index') }}" class="nav-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
-                ÃƒÆ’Ã‚ ÃƒÆ’Ã†
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Ítems
             </a>
+
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera() || $__user->esCustodio())
-            <a href="{{ route('reportes.index') }}" class="nav-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-                ÃƒÆ’Ã‚  Reportes
-            </a>
+                <a href="{{ route('reportes.index') }}"
+                    class="nav-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Reportes
+                </a>
             @endif
 
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera())
                 <a href="{{ route('actas.liberacion.index') }}"
                     class="nav-item {{ request()->routeIs('actas.liberacion.*') ? 'active' : '' }}">
-                    Ãƒ LiberaciÃƒÆ’Ã‚
-
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Liberación
+                </a>
             @endif
 
-            {{-- ADMINISTRACIN --}}
+            {{-- ADMINISTRACIÓN --}}
             @if ($__user->esAdmin())
-                <div class="menu-category">ADMINISTRACIN</div>
-
-
+                <div class="menu-category">ADMINISTRACIÓN</div>
 
                 <a href="{{ route('backup.index') }}"
                     class="nav-item {{ request()->routeIs('backup.*') ? 'active' : '' }}">
-                    Ãƒ Copias de Seguridad
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                    </svg>
+                    Copias de Seguridad
                 </a>
 
                 <a href="{{ route('configuracion.index') }}"
                     class="nav-item {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
-                    ÃƒÆ’Ã‚ ConfiguraciÃƒÆ’Ã‚
-
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Configuración
+                </a>
             @endif
 
             <form action="{{ route('logout') }}" method="POST" class="logout-form">
                 @csrf
-                <button type="submit">Cerrar sesiÃƒÆ’Ã‚
+                <button type="submit">Cerrar sesión</button>
             </form>
         @endauth
     </aside>
@@ -441,21 +529,26 @@
     <div class="main-wrapper">
 
         {{-- ============ TOP NAVBAR ============ --}}
-        {{-- ============ TOP NAVBAR ============ --}}
         <header class="top-navbar">
 
             <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px; max-width: 800px;">
 
-                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menÃƒÆ’Ã†
-                    
+                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menú">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
                 </button>
 
-                {{--  UN ÃƒÆ’Ã¢ BOTN "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
+                {{-- ÚNICO BOTÓN "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
                 @if (!request()->is('/') && !request()->is('dashboard'))
                     <button type="button" onclick="history.back()" title="Volver"
                         style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 16px; border-radius: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; text-decoration: none; transition: all 0.2s ease;"
                         onmouseover="this.style.background='#dbeafe';" onmouseout="this.style.background='#eff6ff';">
-                        <span style="font-size: 16px;">ÃƒÆ’Ã‚ </span>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
                         <span>Volver</span>
                     </button>
                 @endif
@@ -464,12 +557,17 @@
                     style="display: flex; align-items: center; gap: 8px; flex: 1; margin: 0;">
                     <div style="position: relative; flex: 1;">
                         <input type="text" name="buscar" value="{{ request('buscar') }}"
-                            placeholder="Buscar activo por cÃƒÆ’Ã‚ nombre, serie, marca..." autocomplete="off"
+                            placeholder="Buscar activo por código, nombre, serie, marca..." autocomplete="off"
                             style="width: 100%; height: 42px; padding: 0 42px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; background: #f8fafc; color: #0f172a; transition: all 0.2s ease;"
                             onfocus="this.style.background='#ffffff'; this.style.borderColor='#2563eb';"
                             onblur="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';">
                         <span
-                            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none;">Ãƒ
+                            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none; display: inline-flex;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </span>
                     </div>
 
                     <button type="submit"
@@ -483,12 +581,15 @@
             <div style="display: flex; align-items: center; gap: 16px;">
                 @auth
                     @if (auth()->user()->esAdmin())
-                        <a href="{{ route('usuarios.index') }}" title="GestiÃƒÆ’Ã‚ de Usuarios"
+                        <a href="{{ route('usuarios.index') }}" title="Gestión de Usuarios"
                             style="width: 42px; height: 42px; background-color: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15); transition: all 0.2s ease;"
                             onmouseover="this.style.backgroundColor='#2563eb'; this.style.color='#fff';"
                             onmouseout="this.style.backgroundColor='#eff6ff'; this.style.color='#2563eb';">
-                            Ãƒ
-
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </a>
                     @endif
 
                     <div style="text-align: right; border-left: 1px solid #e2e8f0; padding-left: 16px;">
@@ -510,7 +611,7 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{--  MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
+    {{-- MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
     {{-- ============================================================ --}}
     @if (session('login_success'))
         <div id="welcome-modal"
@@ -524,7 +625,7 @@
                     style="height: 8px; background: linear-gradient(90deg, #34d399, #14b8a6, #34d399); animation: pulse 2s ease-in-out infinite;">
                 </div>
 
-                {{-- BotÃƒÆ’Ã‚ cerrar --}}
+                {{-- Botón cerrar --}}
                 <button type="button" onclick="cerrarModalBienvenida()"
                     style="position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f1f5f9; color: #475569; border: none; cursor: pointer; z-index: 10; transition: all 0.2s;"
                     onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
@@ -537,7 +638,7 @@
                 {{-- Contenido principal --}}
                 <div style="padding: 40px 32px 24px; text-align: center;">
 
-                    {{-- ÃƒÆ’Ã† animado --}}
+                    {{-- Icono animado --}}
                     <div
                         style="position: relative; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
                         <span
@@ -552,12 +653,12 @@
                         </span>
                     </div>
 
-                    {{-- Ttulo --}}
+                    {{-- Título --}}
                     <h2 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-                        ÃƒÆ’Ã¢ Correcto!
+                        ¡Acceso Correcto!
                     </h2>
                     <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">
-                        Has iniciado sesiÃƒÆ’Ã‚ exitosamente
+                        Has iniciado sesión exitosamente
                     </p>
 
                     {{-- Card del usuario --}}
@@ -633,7 +734,7 @@
         })();
 
         // ============================================================
-        // MENÃƒÆ’Ã¢ MVIL
+        // MENÚ MÓVIL
         // ============================================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -645,13 +746,13 @@
         document.getElementById('sidebarOverlay')?.addEventListener('click', toggleSidebar);
 
         // ============================================================
-        // SWEET ALERT  Mensajes de sesiÃƒÆ’Ã‚
+        // SWEET ALERT - Mensajes de sesión
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             @if (session('status'))
                 Swal.fire({
                     icon: 'success',
-                    title: 'ÃƒÆ’Ã¢
+                    title: '¡Éxito!',
                     text: @json(session('status')),
                     timer: 3000,
                     showConfirmButton: false
@@ -660,7 +761,7 @@
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
-                    title: 'ÃƒÆ’Ã¢
+                    title: '¡Éxito!',
                     text: @json(session('success')),
                     timer: 3000,
                     showConfirmButton: false
@@ -676,31 +777,31 @@
             @if (session('warning'))
                 Swal.fire({
                     icon: 'warning',
-                    title: 'AtenciÃƒÆ’Ã‚
+                    title: 'Atención',
                     text: @json(session('warning'))
                 });
             @endif
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
-                    title: 'Errores de validaciÃƒÆ’Ã‚
+                    title: 'Errores de validación',
                     html: `<ul style="text-align:left; font-size:13px;">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>`
                 });
             @endif
         });
 
         // ============================================================
-        // CONFIRMAR ELIMINACIN
+        // CONFIRMAR ELIMINACIÓN
         // ============================================================
         function confirmDelete(formId) {
             Swal.fire({
-                title: 'ÃƒÆ’Ã¢ seguro de eliminar?',
-                text: 'ÃƒÆ’Ã¢ acciÃƒÆ’Ã‚ no se puede deshacer!',
+                title: '¿Estás seguro de eliminar?',
+                text: '¡Esta acción no se puede deshacer!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'S, eliminar',
+                confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -721,7 +822,7 @@
         });
 
         // ============================================================
-        //  MODAL DE BIENVENIDA
+        // MODAL DE BIENVENIDA
         // ============================================================
         @if (session('login_success'))
             (function() {
@@ -732,22 +833,22 @@
 
                 if (!modal || !card || !progress) return;
 
-                //  Audio de bienvenida
+                // Audio de bienvenida
                 try {
                     const audio = new Audio("{{ asset('audios/bienvenido.mp3') }}");
                     audio.volume = 0.7;
-                    audio.play().catch(e => console.log('Ãƒ Audio bloqueado:', e.message));
+                    audio.play().catch(e => console.log('Audio bloqueado:', e.message));
                 } catch (e) {
                     console.error('Error al reproducir audio:', e);
                 }
 
-                //  Mostrar modal con animaciÃƒÆ’Ã‚
+                // Mostrar modal con animación
                 requestAnimationFrame(() => {
                     modal.style.opacity = '1';
                     card.style.transform = 'scale(1)';
                 });
 
-                //  Animar barra de progreso
+                // Animar barra de progreso
                 setTimeout(() => {
                     if (progress) {
                         progress.style.width = '0%';
@@ -755,12 +856,12 @@
                     }
                 }, 100);
 
-                //  Auto-cerrar
+                // Auto-cerrar
                 const timeoutId = setTimeout(() => {
                     cerrarModalBienvenida();
                 }, DURACION_MS);
 
-                //  FunciÃƒÆ’Ã‚ global para cerrar
+                // Función global para cerrar
                 window.cerrarModalBienvenida = function() {
                     clearTimeout(timeoutId);
                     modal.style.opacity = '0';
@@ -771,21 +872,21 @@
                     }, 300);
                 };
 
-                //  Cerrar con clic fuera del card
+                // Cerrar con clic fuera del card
                 modal.addEventListener('click', function(e) {
                     if (e.target === modal) {
                         cerrarModalBienvenida();
                     }
                 });
 
-                //  Cerrar con ESC
+                // Cerrar con ESC
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         cerrarModalBienvenida();
                     }
                 });
 
-                //  LIMPIAR EL FLAG DESPUÃƒÆ’Ã‚ DE MOSTRAR EL MODAL 
+                // LIMPIAR EL FLAG DESPUÉS DE MOSTRAR EL MODAL
                 setTimeout(() => {
                     fetch('{{ route('login.clear-welcome') }}', {
                         method: 'POST',
@@ -803,17 +904,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
