@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -352,7 +352,7 @@
                 @endphp
                 <a href="{{ route('aprobaciones.index') }}"
                     class="nav-item {{ request()->routeIs('aprobaciones.*') ? 'active' : '' }}">
-                    âœ… Aprobaciones
+                    ✅ Aprobaciones
                     @if ($__pendientes > 0)
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">{{ $__pendientes }}</span>
@@ -426,7 +426,7 @@
 
                 <a href="{{ route('configuracion.index') }}"
                     class="nav-item {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
-                    âš™ï¸ ConfiguraciÃ³n
+                    ⚙️ ConfiguraciÃ³n
 
             @endif
 
