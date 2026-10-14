@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -322,7 +322,7 @@
             @forelse($__carreras as $car)
                 <a href="{{ route('carreras.show', $car->id_carrera) }}"
                     class="nav-item {{ request()->routeIs('carreras.show') && request()->route('id_carrera') == $car->id_carrera ? 'active' : '' }}">
-                    🔍Ž {{ $car->nombre }}
+                    🎓 {{ $car->nombre }}
                 </a>
             @empty
                 <div style="padding: 8px 14px; font-size: 12px; color: #64748b; font-style: italic;">
@@ -510,7 +510,7 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{-- 🔍Ž‰ MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
+    {{-- 🎓‰ MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
     {{-- ============================================================ --}}
     @if (session('login_success'))
         <div id="welcome-modal"
@@ -721,7 +721,7 @@
         });
 
         // ============================================================
-        // 🔍Ž‰ MODAL DE BIENVENIDA
+        // 🎓‰ MODAL DE BIENVENIDA
         // ============================================================
         @if (session('login_success'))
             (function() {
