@@ -407,11 +407,6 @@
             </a>
             @endif
 
-
-@endif
-
-@endif
-
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera())
                 <a href="{{ route('actas.liberacion.index') }}"
                     class="nav-item {{ request()->routeIs('actas.liberacion.*') ? 'active' : '' }}">
