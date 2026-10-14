@@ -24,20 +24,30 @@ class ReporteController extends Controller
         $user = Auth::user();
 
         // Totales generales excluyendo los dados de baja
-        $queryBase = ActivoFijo::paraUsuario($user)->where('estado_registro', '!=', 'BAJA');
+        $queryBase = ActivoFijo::paraUsuario($user)->where("estado_registro", "!=", "BAJA");
 
-        $totalBuenos    = (clone $queryBase)->where('estado_fisico', 'B')->count();
-        $totalRegulares = (clone $queryBase)->where('estado_fisico', 'R')->count();
-        $totalMalos     = (clone $queryBase)->where('estado_fisico', 'M')->count();
-        $totalFueraServ = (clone $queryBase)->where('estado_fisico', 'FF')->count();
+        $totalBuenos    = (clone $queryBase)->where("estado_fisico", "B")->count();
+        $totalRegulares = (clone $queryBase)->where("estado_fisico", "R")->count();
+        $totalMalos     = (clone $queryBase)->where("estado_fisico", "M")->count();
+        $totalFueraServ = (clone $queryBase)->where("estado_fisico", "FF")->count();
 
-        $carreras   = Carrera::orderBy('nombre')->get();
-        $ambientes  = Ambiente::with('carrera')->orderBy('nombre')->get();
-        $categorias = Categoria::orderBy('nombre')->get();
+        $carreras   = Carrera::when(!$user || !($user->esAdmin() || $user->esOperativo()), function ($q) use ($user) {
+            $ids = $user?->idsCarrerasVisibles();
+            if ($ids === null) return $q;
+            return $q->whereIn("id_carrera", $ids);
+        })->orderBy("nombre")->get();
 
-        return view('reportes.index', compact(
-            'totalBuenos', 'totalRegulares', 'totalMalos', 'totalFueraServ',
-            'carreras', 'ambientes', 'categorias'
+        $ambientes  = Ambiente::with("carrera")->when(!$user || !($user->esAdmin() || $user->esOperativo()), function ($q) use ($user) {
+            $ids = $user?->idsAmbientesVisibles();
+            if (empty($ids)) return $q->whereRaw("1=0");
+            return $q->whereIn("id_ambiente", $ids);
+        })->orderBy("nombre")->get();
+
+        $categorias = Categoria::orderBy("nombre")->get();
+
+        return view("reportes.index", compact(
+            "totalBuenos", "totalRegulares", "totalMalos", "totalFueraServ",
+            "carreras", "ambientes", "categorias"
         ));
     }
 
@@ -425,7 +435,7 @@ class ReporteController extends Controller
     public function porAmbientePdf($id_ambiente)
     {
         $ambiente = $this->ambienteVisible($id_ambiente);
-        // Reutiliza la misma lógica de consulta por ambiente
+        // Reutiliza la misma lÃ³gica de consulta por ambiente
         return $this->porAmbiente($id_ambiente); // o genera PDF directamente
     }
 
@@ -438,7 +448,7 @@ class ReporteController extends Controller
     }
 
     // ============================================================
-    // 3. MÉTODOS DINÁMICOS PARA REPORTES (DESDE EL CENTRO DE REPORTES)
+    // 3. MÃ‰TODOS DINÃMICOS PARA REPORTES (DESDE EL CENTRO DE REPORTES)
     // ============================================================
     public function pdf(Request $request)
     {
