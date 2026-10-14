@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="SISActivos - Sistema de Control y GestiÃ³n de Activos Fijos">
+    <meta name="description" content="SISActivos - Sistema de Control y GestiÃƒÂ³n de Activos Fijos">
     <meta name="theme-color" content="#2563eb">
     <link rel="manifest" href="/manifest.json">
-    <title>@yield('title', 'SISActivos') - Sistema de Control y GestiÃ³n</title>
+    <title>@yield('title', 'SISActivos') - Sistema de Control y GestiÃƒÂ³n</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    {{-- Cola local: permite escanear y registrar sin conexiÃ³n --}}
+    {{-- Cola local: permite escanear y registrar sin conexiÃƒÂ³n --}}
     @vite(['resources/js/offline.js'])
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -256,7 +256,7 @@
             }
         }
 
-        /* ============ ANIMACIN DEL ÃƒÂCONO DE BIENVENIDA ============ */
+        /* ============ ANIMACIN DEL ÃƒÆ’Ã‚ÂCONO DE BIENVENIDA ============ */
         @keyframes successPop {
             0% {
                 transform: scale(0) rotate(-180deg);
@@ -287,7 +287,7 @@
     {{-- Barra de carga global --}}
     <div class="loading-bar" id="loadingBar"></div>
 
-    {{-- Overlay para menÃƒÂº mÃ³vil --}}
+    {{-- Overlay para menÃƒÆ’Ã‚Âº mÃƒÂ³vil --}}
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     {{-- ============ SIDEBAR ============ --}}
@@ -322,7 +322,7 @@
             @forelse($__carreras as $car)
                 <a href="{{ route('carreras.show', $car->id_carrera) }}"
                     class="nav-item {{ request()->routeIs('carreras.show') && request()->route('id_carrera') == $car->id_carrera ? 'active' : '' }}">
-                    ðŸŽ“ {{ $car->nombre }}
+                    Ã°Å¸Å½â€œ {{ $car->nombre }}
                 </a>
             @empty
                 <div style="padding: 8px 14px; font-size: 12px; color: #64748b; font-style: italic;">
@@ -336,7 +336,7 @@
             @if ($__user->puedeRegistrarVerificacion())
                 <a href="{{ route('verificaciones.index') }}"
                     class="nav-item {{ request()->routeIs('verificaciones.*') && !request()->routeIs('verificaciones-aprobacion.*') ? 'active' : '' }}">
-                    ðŸ” VerificaciÃ³n FÃ­sica
+                    Ã°Å¸â€Â VerificaciÃƒÂ³n FÃƒÂ­sica
                     <span id="offline-pendientes"
                         style="display: none; background: #f59e0b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;"
                         title="Verificaciones guardadas en este equipo, pendientes de enviar">0</span>
@@ -352,7 +352,7 @@
                 @endphp
                 <a href="{{ route('aprobaciones.index') }}"
                     class="nav-item {{ request()->routeIs('aprobaciones.*') ? 'active' : '' }}">
-                    Ã¢Å“â€¦ Aprobaciones
+                    ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Aprobaciones
                     @if ($__pendientes > 0)
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">{{ $__pendientes }}</span>
@@ -363,7 +363,7 @@
             @if ($__user->puedeSolicitarBajaOTransferencia())
                 <a href="{{ route('actas.baja.index') }}"
                     class="nav-item {{ request()->routeIs('actas.baja.*') ? 'active' : '' }}">
-                    ðŸ“„ Actas de Baja
+                    Ã°Å¸â€œâ€ž Actas de Baja
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -372,7 +372,7 @@
 
                 <a href="{{ route('actas.transferencia.index') }}"
                     class="nav-item {{ request()->routeIs('actas.transferencia.*') ? 'active' : '' }}">
-                    ðŸ“„ Transferencias
+                    Ã°Å¸â€œâ€ž Transferencias
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -391,25 +391,25 @@
             {{--  NUEVO: No Activos --}}
             <a href="{{ route('activos.noActivos') }}"
                 class="nav-item {{ request()->routeIs('activos.no-activos') ? 'active' : '' }}">
-                ðŸ”Ã…Â¡ No Activos
+                Ã°Å¸â€ÂÃƒâ€¦Ã‚Â¡ No Activos
             </a>
             <a href="{{ route('activos.baja') }}"
                 class="nav-item {{ request()->routeIs('activos.baja') ? 'active' : '' }}">
-                ðŸ”Ã¢â‚¬â€Ã¢â‚¬ËœÃƒÂ¯ Activos de Baja
+                Ã°Å¸â€ÂÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã‚Â¯ Activos de Baja
             </a>
             <a href="{{ route('items.index') }}" class="nav-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
-                Ã°Å¸ÂÂ·Ã¯Â¸Â ÃƒÂtems
+                ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â·ÃƒÂ¯Ã‚Â¸Ã‚Â ÃƒÆ’Ã‚Âtems
             </a>
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera() || $__user->esCustodio())
             <a href="{{ route('reportes.index') }}" class="nav-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-                Ã°Å¸â€œÅ  Reportes
+                ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Reportes
             </a>
             @endif
 
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera())
                 <a href="{{ route('actas.liberacion.index') }}"
                     class="nav-item {{ request()->routeIs('actas.liberacion.*') ? 'active' : '' }}">
-                    ðŸ”Ã…Â¡ LiberaciÃ³n
+                    Ã°Å¸â€ÂÃƒâ€¦Ã‚Â¡ LiberaciÃƒÂ³n
 
             @endif
 
@@ -421,18 +421,18 @@
 
                 <a href="{{ route('backup.index') }}"
                     class="nav-item {{ request()->routeIs('backup.*') ? 'active' : '' }}">
-                    ðŸ”Ã¢â‚¬â„¢Ã‚Â¾ Copias de Seguridad
+                    Ã°Å¸â€ÂÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â¾ Copias de Seguridad
                 </a>
 
                 <a href="{{ route('configuracion.index') }}"
                     class="nav-item {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
-                    Ã¢Å¡â„¢Ã¯Â¸Â ConfiguraciÃ³n
+                    ÃƒÂ¢Ã…Â¡Ã¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â ConfiguraciÃƒÂ³n
 
             @endif
 
             <form action="{{ route('logout') }}" method="POST" class="logout-form">
                 @csrf
-                <button type="submit">Cerrar sesiÃ³n</button>
+                <button type="submit">Cerrar sesiÃƒÂ³n</button>
             </form>
         @endauth
     </aside>
@@ -446,16 +446,16 @@
 
             <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px; max-width: 800px;">
 
-                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menÃƒÂº">
+                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menÃƒÆ’Ã‚Âº">
                     
                 </button>
 
-                {{--  UN Ã…Â¡NICO BOTN "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
+                {{--  UN Ãƒâ€¦Ã‚Â¡NICO BOTN "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
                 @if (!request()->is('/') && !request()->is('dashboard'))
                     <button type="button" onclick="history.back()" title="Volver"
                         style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 16px; border-radius: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; text-decoration: none; transition: all 0.2s ease;"
                         onmouseover="this.style.background='#dbeafe';" onmouseout="this.style.background='#eff6ff';">
-                        <span style="font-size: 16px;">Ã¢â‚¬Â </span>
+                        <span style="font-size: 16px;">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â </span>
                         <span>Volver</span>
                     </button>
                 @endif
@@ -464,12 +464,12 @@
                     style="display: flex; align-items: center; gap: 8px; flex: 1; margin: 0;">
                     <div style="position: relative; flex: 1;">
                         <input type="text" name="buscar" value="{{ request('buscar') }}"
-                            placeholder="Buscar activo por cÃ³digo, nombre, serie, marca..." autocomplete="off"
+                            placeholder="Buscar activo por cÃƒÂ³digo, nombre, serie, marca..." autocomplete="off"
                             style="width: 100%; height: 42px; padding: 0 42px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; background: #f8fafc; color: #0f172a; transition: all 0.2s ease;"
                             onfocus="this.style.background='#ffffff'; this.style.borderColor='#2563eb';"
                             onblur="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';">
                         <span
-                            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none;">ðŸ”</span>
+                            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none;">Ã°Å¸â€Â</span>
                     </div>
 
                     <button type="submit"
@@ -483,11 +483,11 @@
             <div style="display: flex; align-items: center; gap: 16px;">
                 @auth
                     @if (auth()->user()->esAdmin())
-                        <a href="{{ route('usuarios.index') }}" title="GestiÃ³n de Usuarios"
+                        <a href="{{ route('usuarios.index') }}" title="GestiÃƒÂ³n de Usuarios"
                             style="width: 42px; height: 42px; background-color: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15); transition: all 0.2s ease;"
                             onmouseover="this.style.backgroundColor='#2563eb'; this.style.color='#fff';"
                             onmouseout="this.style.backgroundColor='#eff6ff'; this.style.color='#2563eb';">
-                            ðŸ”Ã¢â‚¬Ëœ
+                            Ã°Å¸â€ÂÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
 
                     @endif
 
@@ -510,7 +510,7 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{-- ðŸŽ“Ã¢â‚¬Â° MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
+    {{-- Ã°Å¸Å½â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
     {{-- ============================================================ --}}
     @if (session('login_success'))
         <div id="welcome-modal"
@@ -524,7 +524,7 @@
                     style="height: 8px; background: linear-gradient(90deg, #34d399, #14b8a6, #34d399); animation: pulse 2s ease-in-out infinite;">
                 </div>
 
-                {{-- BotÃ³n cerrar --}}
+                {{-- BotÃƒÂ³n cerrar --}}
                 <button type="button" onclick="cerrarModalBienvenida()"
                     style="position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f1f5f9; color: #475569; border: none; cursor: pointer; z-index: 10; transition: all 0.2s;"
                     onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
@@ -537,7 +537,7 @@
                 {{-- Contenido principal --}}
                 <div style="padding: 40px 32px 24px; text-align: center;">
 
-                    {{-- ÃƒÂcono animado --}}
+                    {{-- ÃƒÆ’Ã‚Âcono animado --}}
                     <div
                         style="position: relative; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
                         <span
@@ -554,10 +554,10 @@
 
                     {{-- Ttulo --}}
                     <h2 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-                        Ã‚Â¡Acceso Correcto!
+                        Ãƒâ€šÃ‚Â¡Acceso Correcto!
                     </h2>
                     <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">
-                        Has iniciado sesiÃ³n exitosamente
+                        Has iniciado sesiÃƒÂ³n exitosamente
                     </p>
 
                     {{-- Card del usuario --}}
@@ -633,7 +633,7 @@
         })();
 
         // ============================================================
-        // MENÃ…Â¡ MVIL
+        // MENÃƒâ€¦Ã‚Â¡ MVIL
         // ============================================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -645,13 +645,13 @@
         document.getElementById('sidebarOverlay')?.addEventListener('click', toggleSidebar);
 
         // ============================================================
-        // SWEET ALERT  Mensajes de sesiÃ³n
+        // SWEET ALERT  Mensajes de sesiÃƒÂ³n
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             @if (session('status'))
                 Swal.fire({
                     icon: 'success',
-                    title: 'Ã‚Â¡Ã¢â‚¬Â°xito!',
+                    title: 'Ãƒâ€šÃ‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°xito!',
                     text: @json(session('status')),
                     timer: 3000,
                     showConfirmButton: false
@@ -660,7 +660,7 @@
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
-                    title: 'Ã‚Â¡Ã¢â‚¬Â°xito!',
+                    title: 'Ãƒâ€šÃ‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°xito!',
                     text: @json(session('success')),
                     timer: 3000,
                     showConfirmButton: false
@@ -676,14 +676,14 @@
             @if (session('warning'))
                 Swal.fire({
                     icon: 'warning',
-                    title: 'AtenciÃ³n',
+                    title: 'AtenciÃƒÂ³n',
                     text: @json(session('warning'))
                 });
             @endif
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
-                    title: 'Errores de validaciÃ³n',
+                    title: 'Errores de validaciÃƒÂ³n',
                     html: `<ul style="text-align:left; font-size:13px;">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>`
                 });
             @endif
@@ -694,8 +694,8 @@
         // ============================================================
         function confirmDelete(formId) {
             Swal.fire({
-                title: 'Ã‚Â¿EstÃ¡s seguro de eliminar?',
-                text: 'Ã‚Â¡Esta acciÃ³n no se puede deshacer!',
+                title: 'Ãƒâ€šÃ‚Â¿EstÃƒÂ¡s seguro de eliminar?',
+                text: 'Ãƒâ€šÃ‚Â¡Esta acciÃƒÂ³n no se puede deshacer!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
@@ -721,7 +721,7 @@
         });
 
         // ============================================================
-        // ðŸŽ“Ã¢â‚¬Â° MODAL DE BIENVENIDA
+        // Ã°Å¸Å½â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° MODAL DE BIENVENIDA
         // ============================================================
         @if (session('login_success'))
             (function() {
@@ -736,12 +736,12 @@
                 try {
                     const audio = new Audio("{{ asset('audios/bienvenido.mp3') }}");
                     audio.volume = 0.7;
-                    audio.play().catch(e => console.log('ðŸ”Ã¢â‚¬Â¡ Audio bloqueado:', e.message));
+                    audio.play().catch(e => console.log('Ã°Å¸â€ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ Audio bloqueado:', e.message));
                 } catch (e) {
                     console.error('Error al reproducir audio:', e);
                 }
 
-                //  Mostrar modal con animaciÃ³n
+                //  Mostrar modal con animaciÃƒÂ³n
                 requestAnimationFrame(() => {
                     modal.style.opacity = '1';
                     card.style.transform = 'scale(1)';
@@ -760,7 +760,7 @@
                     cerrarModalBienvenida();
                 }, DURACION_MS);
 
-                //  FunciÃ³n global para cerrar
+                //  FunciÃƒÂ³n global para cerrar
                 window.cerrarModalBienvenida = function() {
                     clearTimeout(timeoutId);
                     modal.style.opacity = '0';
@@ -785,7 +785,7 @@
                     }
                 });
 
-                //  LIMPIAR EL FLAG DESPUÃ¢â‚¬Â°S DE MOSTRAR EL MODAL 
+                //  LIMPIAR EL FLAG DESPUÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°S DE MOSTRAR EL MODAL 
                 setTimeout(() => {
                     fetch('{{ route('login.clear-welcome') }}', {
                         method: 'POST',
