@@ -297,34 +297,36 @@ class User extends Authenticatable
         return $porAmbientes->unique()->values()->all();
     }
 
-    /**
-     * Aplica el alcance del usuario a una consulta de activos.
-     */
-    public function scopeActivos($query)
-    {
-        if ($this->esAdmin() || $this->esOperativo()) {
-            return $query;
-        }
+        /**
+         * Aplica el alcance del usuario a una consulta de activos.
+         */
+        public function scopeActivos($query)
+        {
+            if ($this->esAdmin() || $this->esOperativo()) {
+                return $query;
+            }
 
-        $idsAmbientes = $this->idsAmbientesVisibles();
+            $idsAmbientes = $this->idsAmbientesVisibles();
 
-        return $query->where(function ($q) use ($idsAmbientes) {
-            $q->where('id_custodio', $this->id_usuario);
-
-            if ($this->id_carrera) {
-                $q->orWhereIn('id_item', function ($sub) {
-                    $sub->select('id_item')
-                        ->from('item_usuario')
-                        ->where('id_usuario', $this->id_usuario)
-                        ->whereNull('fecha_fin');
+            return $query->where(function ($q) use ($idsAmbientes) {
+                $q->whereHas('activosCustodiados', function ($query) {
+                    $query->where('activo_custodio.id_usuario', $this->id_usuario);
                 });
-            }
 
-            if (! empty($idsAmbientes)) {
-                $q->orWhereIn('id_ambiente', $idsAmbientes);
-            }
-        });
-    }
+                if ($this->id_carrera) {
+                    $q->orWhereIn('id_item', function ($sub) {
+                        $sub->select('id_item')
+                            ->from('item_usuario')
+                            ->where('id_usuario', $this->id_usuario)
+                            ->whereNull('fecha_fin');
+                    });
+                }
+
+                if (! empty($idsAmbientes)) {
+                    $q->orWhereIn('id_ambiente', $idsAmbientes);
+                }
+            });
+        }
 
     // ============================================================
     // RELACIONES

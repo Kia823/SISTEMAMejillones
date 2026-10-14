@@ -15,14 +15,14 @@ class ActivoFijo extends Model
     public $incrementing  = true;
     protected $keyType    = 'int';
 
-   protected $fillable = [
-    'codigo_activo', 'tipo_bien', 'nombre', 'descripcion', 'observaciones',
-    'marca', 'modelo', 'numero_serie',
-    'fecha_adquisicion', 'valor_adquisicion',
-    'id_categoria', 'id_ambiente', 'id_fuente', 'id_custodio', 'id_item',
-    'estado_fisico', 'estado_registro',
-    'ruta_qr', 'imagen', 'imagen_lateral', 'imagen_detalle', 'codigo_qr',  // ⭐ NUEVAS
-];
+    protected $fillable = [
+        'codigo_activo', 'tipo_bien', 'nombre', 'descripcion', 'observaciones',
+        'marca', 'modelo', 'numero_serie',
+        'fecha_adquisicion', 'valor_adquisicion',
+        'id_categoria', 'id_ambiente', 'id_fuente', 'id_item',
+        'estado_fisico', 'estado_registro',
+        'ruta_qr', 'imagen', 'imagen_lateral', 'imagen_detalle', 'codigo_qr',  // ⭐ NUEVAS
+    ];
 
     protected $casts = [
         'fecha_adquisicion' => 'date',
@@ -67,7 +67,6 @@ class ActivoFijo extends Model
             'id_categoria'      => 'required|exists:categorias,id_categoria',
             'id_ambiente'       => 'required|exists:ambientes,id_ambiente',
             'id_fuente'         => 'nullable|exists:fuentes_financiamiento,id_fuente',
-            'id_custodio'       => 'required|exists:usuarios,id_usuario',
             'id_item'           => 'nullable|exists:items,id_item',
 
             // Estados
@@ -76,9 +75,9 @@ class ActivoFijo extends Model
 
             // Archivos
             // Imágenes (la principal es obligatoria, las otras opcionales)
-'imagen'         => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
-'imagen_lateral' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
-'imagen_detalle' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        'imagen'         => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        'imagen_lateral' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        'imagen_detalle' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
         ];
     }
 
@@ -112,9 +111,8 @@ class ActivoFijo extends Model
         'id_ambiente.required'       => 'El ambiente es obligatorio.',
         'id_ambiente.exists'         => 'El ambiente seleccionado no existe.',
         'id_fuente.exists'           => 'La fuente de financiamiento no existe.',
-        'id_custodio.required'        => 'Debe asignar un custodio: el activo pertenece a una persona.',
-        'id_custodio.exists'         => 'El custodio seleccionado no existe.',
         'id_item.exists'             => 'El ítem seleccionado no existe.',
+
 
         // Estados
         'estado_fisico.in'           => 'El estado físico no es válido.',
@@ -125,14 +123,13 @@ class ActivoFijo extends Model
         'imagen.mimes'               => 'La imagen debe ser JPG, PNG o WEBP.',
         'imagen.max'                 => 'La imagen no debe pesar más de 5 MB.',
         'imagen.required'         => 'La foto frontal del activo es obligatoria.',
-'imagen_lateral.image'    => 'La foto lateral debe ser una imagen.',
-'imagen_lateral.mimes'    => 'La foto lateral debe ser JPG, PNG o WEBP.',
-'imagen_lateral.max'      => 'La foto lateral no debe pesar más de 5 MB.',
-'imagen_detalle.image'    => 'La foto de detalle debe ser una imagen.',
-'imagen_detalle.mimes'    => 'La foto de detalle debe ser JPG, PNG o WEBP.',
-'imagen_detalle.max'      => 'La foto de detalle no debe pesar más de 5 MB.',
-
-        ];
+        'imagen_lateral.image'    => 'La foto lateral debe ser una imagen.',
+        'imagen_lateral.mimes'    => 'La foto lateral debe ser JPG, PNG o WEBP.',
+        'imagen_lateral.max'      => 'La foto lateral no debe pesar más de 5 MB.',
+        'imagen_detalle.image'    => 'La foto de detalle debe ser una imagen.',
+        'imagen_detalle.mimes'    => 'La foto de detalle debe ser JPG, PNG o WEBP.',
+        'imagen_detalle.max'      => 'La foto de detalle no debe pesar más de 5 MB.',
+    ];
 
     // ==========================================
     // RELACIONES

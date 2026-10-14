@@ -129,10 +129,10 @@
                                             <span style="font-size:11px;color:#94a3b8;font-style:italic;">Sin descripción</span>
                                         @endif
                                     </td>
-                                    <td style="padding:12px 10px;">
-                                        <div style="font-size:12px;color:#0f172a;font-weight:700;">{{ $a->custodio->nombre_completo ?? 'Sin asignar' }}</div>
-                                        <div style="font-size:11px;color:#64748b;margin-top:2px;">{{ $a->fuente->nombre ?? ($a->fuente->codigo ?? '—') }}</div>
-                                    </td>
+                                     <td style="padding:12px 10px;">
+                                         <div style="font-size:12px;color:#0f172a;font-weight:700;">{{ $a->custodioActual->nombre_completo ?? 'Sin asignar' }}</div>
+                                         <div style="font-size:11px;color:#64748b;margin-top:2px;">{{ $a->fuente->nombre ?? ($a->fuente->codigo ?? '—') }}</div>
+                                     </td>
                                     <td style="padding:12px 10px;font-size:12px;color:#334155;font-weight:600;">
                                         {{ $a->fecha_adquisicion ? \Carbon\Carbon::parse($a->fecha_adquisicion)->format('d/m/Y') : ($a->created_at ? $a->created_at->format('d/m/Y') : '—') }}
                                     </td>
@@ -318,11 +318,11 @@
 
                     <div class="af-span-2">
                         <label class="af-label">Custodio Responsable *</label>
-                        <input type="text" id="buscador-custodio-modal" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
-                            style="width:100%;padding:9px 12px;border-radius:8px 8px 0 0;border:1px solid #cbd5e1;font-size:13px;box-sizing:border-box;background:#f8fafc;"
-                            onkeyup="filtrarCustodiosModal(this.value)">
-                        <select name="id_custodio" id="crear-id-custodio" size="4"
-                            style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
+                         <input type="text" id="buscador-custodio-modal" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
+                             style="width:100%;padding:9px 12px;border-radius:8px 8px 0 0;border:1px solid #cbd5e1;font-size:13px;box-sizing:border-box;background:#f8fafc;"
+                             onkeyup="filtrarCustodiosModal(this.value)">
+                         <select name="id_custodios[]" id="crear-id-custodios" multiple size="5"
+                             style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
                             @foreach (\App\Models\User::where('estado', 'ACTIVO')->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])->orderBy('nombre_completo')->get() as $u)
                                 @php
                                     $itemActivo = $u->items->first();
@@ -332,9 +332,9 @@
                                 <option value="{{ $u->id_usuario }}" data-busqueda="{{ $textoBusqueda }}" style="padding: 6px; border-bottom: 1px solid #f1f5f9;">
                                     {{ $u->nombre_completo }} (C.I.: {{ $u->ci }} · {{ $nroItem }})
                                 </option>
-                            @endforeach
-                        </select>
-                        <div class="af-error" data-for="crear-id-custodio"></div>
+                             @endforeach
+                         </select>
+                         <div class="af-error" data-for="id_custodios"></div>
                     </div>
 
                     <div class="af-span-2">
@@ -485,11 +485,11 @@
 
                     <div class="af-span-2">
                         <label class="af-label">Custodio Responsable *</label>
-                        <input type="text" id="edit-buscador-custodio-modal" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
-                            style="width:100%;padding:9px 12px;border-radius:8px 8px 0 0;border:1px solid #cbd5e1;font-size:13px;box-sizing:border-box;background:#f8fafc;"
-                            onkeyup="filtrarCustodiosEditModal(this.value)">
-                        <select name="id_custodio" id="edit-id-custodio" size="4"
-                            style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
+                         <input type="text" id="edit-buscador-custodio-modal" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
+                             style="width:100%;padding:9px 12px;border-radius:8px 8px 0 0;border:1px solid #cbd5e1;font-size:13px;box-sizing:border-box;background:#f8fafc;"
+                             onkeyup="filtrarCustodiosEditModal(this.value)">
+                         <select name="id_custodios[]" id="edit-id-custodios" multiple size="5"
+                             style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
                             @foreach (\App\Models\User::where('estado', 'ACTIVO')->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])->orderBy('nombre_completo')->get() as $u)
                                 @php
                                     $itemActivo = $u->items->first();
@@ -499,9 +499,9 @@
                                 <option value="{{ $u->id_usuario }}" data-busqueda="{{ $textoBusqueda }}" style="padding: 6px; border-bottom: 1px solid #f1f5f9;">
                                     {{ $u->nombre_completo }} (C.I.: {{ $u->ci }} · {{ $nroItem }})
                                 </option>
-                            @endforeach
-                        </select>
-                        <div class="af-error" data-for="edit-id-custodio"></div>
+                             @endforeach
+                         </select>
+                         <div class="af-error" data-for="id_custodios"></div>
                     </div>
 
                     <div class="af-span-2">
@@ -592,43 +592,43 @@
         function cambiarTipoBien(tipo) { aplicarTipoBien(tipo, 'crear'); }
         function cambiarTipoBienEdit(tipo) { aplicarTipoBien(tipo, 'edit'); }
 
-        function filtrarCustodiosModal(texto) {
-            const filtro = texto.toLowerCase().trim();
-            const select = document.getElementById('crear-id-custodio');
-            for (let i = 0; i < select.options.length; i++) {
-                const opt = select.options[i];
-                const busqueda = opt.getAttribute('data-busqueda') || "";
-                opt.style.display = busqueda.includes(filtro) ? "" : "none";
-            }
-        }
+         function filtrarCustodiosModal(texto) {
+             const filtro = texto.toLowerCase().trim();
+             const select = document.getElementById('crear-id-custodios');
+             for (let i = 0; i < select.options.length; i++) {
+                 const opt = select.options[i];
+                 const busqueda = opt.getAttribute('data-busqueda') || "";
+                 opt.style.display = busqueda.includes(filtro) ? "" : "none";
+             }
+         }
 
-        function filtrarCustodiosEditModal(texto) {
-            const filtro = texto.toLowerCase().trim();
-            const select = document.getElementById('edit-id-custodio');
-            for (let i = 0; i < select.options.length; i++) {
-                const opt = select.options[i];
-                const busqueda = opt.getAttribute('data-busqueda') || "";
-                opt.style.display = busqueda.includes(filtro) ? "" : "none";
-            }
-        }
+         function filtrarCustodiosEditModal(texto) {
+             const filtro = texto.toLowerCase().trim();
+             const select = document.getElementById('edit-id-custodios');
+             for (let i = 0; i < select.options.length; i++) {
+                 const opt = select.options[i];
+                 const busqueda = opt.getAttribute('data-busqueda') || "";
+                 opt.style.display = busqueda.includes(filtro) ? "" : "none";
+             }
+         }
 
         function validar(tipoBien, prefijo) {
             limpiarTodosLosErrores();
             let hayErrores = false;
             const esFijo = tipoBien === 'ACTIVO_FIJO';
 
-            const requeridos = [
-                { id: prefijo + '-codigo-activo', msg: 'El código es obligatorio.' },
-                { id: prefijo + '-id-categoria', msg: 'Selecciona una categoría.' },
-                { id: prefijo + '-cantidad', msg: 'La cantidad es obligatoria.' },
-                { id: prefijo + '-fecha-adquisicion', msg: 'La fecha es obligatoria.' },
-                { id: prefijo + '-nombre', msg: 'El nombre es obligatorio.' },
-                { id: prefijo + '-id-fuente', msg: 'Selecciona una fuente.' },
-                { id: prefijo + '-estado-fisico', msg: 'Selecciona un estado físico.' },
-                { id: prefijo + '-valor-adquisicion', msg: 'El valor es obligatorio.' },
-                { id: prefijo + '-id-custodio', msg: 'Selecciona un custodio.' },
-                { id: prefijo + '-descripcion', msg: 'La descripción es obligatoria.' },
-            ];
+             const requeridos = [
+                 { id: prefijo + '-codigo-activo', msg: 'El código es obligatorio.' },
+                 { id: prefijo + '-id-categoria', msg: 'Selecciona una categoría.' },
+                 { id: prefijo + '-cantidad', msg: 'La cantidad es obligatoria.' },
+                 { id: prefijo + '-fecha-adquisicion', msg: 'La fecha es obligatoria.' },
+                 { id: prefijo + '-nombre', msg: 'El nombre es obligatorio.' },
+                 { id: prefijo + '-id-fuente', msg: 'Selecciona una fuente.' },
+                 { id: prefijo + '-estado-fisico', msg: 'Selecciona un estado físico.' },
+                 { id: prefijo + '-valor-adquisicion', msg: 'El valor es obligatorio.' },
+                 { id: prefijo + '-id-custodios', msg: 'Seleccione al menos un custodio.' },
+                 { id: prefijo + '-descripcion', msg: 'La descripción es obligatoria.' },
+             ];
 
             if (esFijo) {
                 requeridos.push(
@@ -638,14 +638,33 @@
                 );
             }
 
-            requeridos.forEach(({ id, msg }) => {
-                const campo = document.getElementById(id);
-                if (!campo) return;
-                if ((campo.value || '').trim() === '') {
-                    mostrarError(id, msg);
-                    hayErrores = true;
-                }
-            });
+             requeridos.forEach(({ id, msg }) => {
+                 const campo = document.getElementById(id);
+                 if (!campo) return;
+                 
+                 // Special handling for multiple select custodios
+                 if (id === prefijo + '-id-custodios') {
+                     // Check if any option is selected
+                     const select = campo;
+                     let hasSelection = false;
+                     for (let i = 0; i < select.options.length; i++) {
+                         if (select.options[i].selected) {
+                             hasSelection = true;
+                             break;
+                         }
+                     }
+                     if (!hasSelection) {
+                         mostrarError(id, msg);
+                         hayErrores = true;
+                     }
+                 } else {
+                     // Standard validation for other fields
+                     if ((campo.value || '').trim() === '') {
+                         mostrarError(id, msg);
+                         hayErrores = true;
+                     }
+                 }
+             });
 
             return !hayErrores;
         }
@@ -716,7 +735,28 @@
                 document.getElementById('edit-estado-fisico').value = data.estado_fisico || 'B';
                 document.getElementById('edit-valor-adquisicion').value = data.valor_adquisicion || 0;
                 document.getElementById('edit-descripcion').value = data.descripcion || '';
-                document.getElementById('edit-id-custodio').value = data.id_custodio || '';
+                 document.getElementById('edit-descripcion').value = data.descripcion || '';
+
+                 // Seleccionar custodios múltiples
+                 const custodioSelect = document.getElementById('edit-id-custodios');
+                 if (data.custodios && Array.isArray(data.custodios)) {
+                     // First, deselect all options
+                     for (let i = 0; i < custodioSelect.options.length; i++) {
+                         custodioSelect.options[i].selected = false;
+                     }
+                     // Then select the ones that match the data
+                     data.custodios.forEach(custodioId => {
+                         for (let i = 0; i < custodioSelect.options.length; i++) {
+                             if (custodioSelect.options[i].value == custodioId) {
+                                 custodioSelect.options[i].selected = true;
+                                 break;
+                             }
+                         }
+                     });
+                 } else if (data.id_custodio) {
+                     // Fallback for backward compatibility - if only single custodio is provided
+                     document.getElementById('edit-id-custodios').value = [data.id_custodio];
+                 }
                 document.getElementById('edit-select-tipo-bien').value = data.tipo_bien || 'ACTIVO_FIJO';
 
                 // Mostrar previsualizaciones de fotos actuales
@@ -776,17 +816,17 @@
             if (!json.errors) return;
             Object.keys(json.errors).forEach(campo => {
                 const mensaje = json.errors[campo][0];
-                const map = {
-                    'codigo_activo': prefijo + '-codigo-activo',
-                    'nombre': prefijo + '-nombre',
-                    'id_categoria': prefijo + '-id-categoria',
-                    'id_fuente': prefijo + '-id-fuente',
-                    'id_custodio': prefijo + '-id-custodio',
-                    'estado_fisico': prefijo + '-estado-fisico',
-                    'marca': prefijo + '-input-marca',
-                    'modelo': prefijo + '-input-modelo',
-                    'numero_serie': prefijo + '-input-serie',
-                };
+                 const map = {
+                     'codigo_activo': prefijo + '-codigo-activo',
+                     'nombre': prefijo + '-nombre',
+                     'id_categoria': prefijo + '-id-categoria',
+                     'id_fuente': prefijo + '-id-fuente',
+                     'id_custodios': prefijo + '-id-custodios',
+                     'estado_fisico': prefijo + '-estado-fisico',
+                     'marca': prefijo + '-input-marca',
+                     'modelo': prefijo + '-input-modelo',
+                     'numero_serie': prefijo + '-input-serie',
+                 };
                 if (map[campo] && document.getElementById(map[campo])) {
                     mostrarError(map[campo], mensaje);
                 }
