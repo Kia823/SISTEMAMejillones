@@ -250,7 +250,7 @@ class ActivoController extends Controller
         $activos = ActivoFijo::paraUsuario(Auth::user())
             ->where('id_categoria', $categoria->id_categoria)
             ->where('estado_registro', '!=', 'BAJA')
-            ->with(['ambiente', 'custodio', 'fuente'])
+            ->with(['ambiente', 'fuente'])
             ->orderBy('nombre')
             ->orderBy('codigo_activo')
             ->get();
