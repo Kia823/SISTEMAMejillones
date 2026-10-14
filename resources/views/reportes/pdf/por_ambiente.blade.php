@@ -170,7 +170,10 @@
                     <td style="text-align:center;">{{ $r->dia }}</td>
                     <td style="text-align:center;">{{ $r->mes }}</td>
                     <td style="text-align:center;">{{ $r->anio }}</td>
-                    <td>{{ $r->carrera }}</td>
+                    
+                    {{-- ✅ CORREGIDO: Muestra AMBIENTE - CARRERA --}}
+                    <td>{{ $ambiente->nombre }} - {{ $r->carrera ?? ($ambiente->carrera->nombre ?? '—') }}</td>
+                    
                     <td>{{ $r->observaciones ?? '—' }}</td>
                     <td style="text-align:center;">
                         @if($r->imagen)
@@ -194,68 +197,95 @@
         </tfoot>
     </table>
 
+    {{-- ========================================================= --}}
     {{-- FIRMAS DINÁMICAS SEGÚN ROLES DEL AMBIENTE --}}
-    <table class="firmas" style="margin-top: 15px; width: 100%; border-collapse: collapse;">
-        @php
-            $firmantes = [];
-            
-            $custodios = \App\Models\User::whereHas('activosCustodiados', function($q) use ($ambiente) {
-                $q->where('activos_fijos.id_ambiente', $ambiente->id_ambiente);
-            })->distinct()->get(['nombre_completo', 'ci']);
-            
-            foreach ($custodios as $c) {
+    {{-- ========================================================= --}}
+    @php
+        $firmantes = [];
+        $idsAgregados = []; // Para evitar duplicados
+
+        // 1. CUSTODIOS del ambiente (los que tienen activos asignados en este ambiente)
+        $custodios = \App\Models\User::whereHas('activosCustodiados', function($q) use ($ambiente) {
+            $q->where('activos_fijos.id_ambiente', $ambiente->id_ambiente);
+        })
+        ->where('estado', 'ACTIVO')
+        ->distinct()
+        ->get(['id_usuario', 'nombre_completo', 'ci']);
+
+        foreach ($custodios as $c) {
+            if (!in_array($c->id_usuario, $idsAgregados)) {
                 $firmantes[] = ['nombre' => $c->nombre_completo, 'ci' => $c->ci, 'rol' => 'CUSTODIO'];
+                $idsAgregados[] = $c->id_usuario;
             }
-            
-            if ($ambiente->carrera) {
-                $jefeCarrera = \App\Models\User::where('id_carrera', $ambiente->carrera->id_carrera)
-                    ->where('rol', 'JEFE_CARRERA')
-                    ->where('estado', 'ACTIVO')
-                    ->first();
-                if ($jefeCarrera) {
-                    $firmantes[] = ['nombre' => $jefeCarrera->nombre_completo, 'ci' => $jefeCarrera->ci, 'rol' => 'JEFE DE CARRERA'];
-                }
-                
-                $docentes = \App\Models\User::where('id_carrera', $ambiente->carrera->id_carrera)
-                    ->whereIn('rol', ['DOCENTE', 'DOCENTE_CUSTODIO'])
-                    ->where('estado', 'ACTIVO')
-                    ->limit(2)
-                    ->get(['nombre_completo', 'ci']);
-                foreach ($docentes as $d) {
-                    $firmantes[] = ['nombre' => $d->nombre_completo, 'ci' => $d->ci, 'rol' => 'DOCENTE'];
-                }
+        }
+
+        // 2. JEFE DE CARRERA del ambiente
+        if ($ambiente->carrera) {
+            $jefeCarrera = \App\Models\User::where('id_carrera', $ambiente->carrera->id_carrera)
+                ->where('rol', 'JEFE_CARRERA')
+                ->where('estado', 'ACTIVO')
+                ->first();
+            if ($jefeCarrera && !in_array($jefeCarrera->id_usuario, $idsAgregados)) {
+                $firmantes[] = ['nombre' => $jefeCarrera->nombre_completo, 'ci' => $jefeCarrera->ci, 'rol' => 'JEFE DE CARRERA'];
+                $idsAgregados[] = $jefeCarrera->id_usuario;
             }
-            
-            $admin = \App\Models\User::where('rol', 'ADMINISTRADOR')->where('estado', 'ACTIVO')->first();
-            if ($admin) {
-                $firmantes[] = ['nombre' => $admin->nombre_completo, 'ci' => $admin->ci, 'rol' => 'ADMINISTRADORA'];
+        }
+
+        // 3. DOCENTES del ambiente (si los hay)
+        $docentes = \App\Models\User::whereHas('activosCustodiados', function($q) use ($ambiente) {
+            $q->where('activos_fijos.id_ambiente', $ambiente->id_ambiente);
+        })
+        ->whereIn('rol', ['DOCENTE', 'DOCENTE_CUSTODIO'])
+        ->where('estado', 'ACTIVO')
+        ->distinct()
+        ->limit(2)
+        ->get(['id_usuario', 'nombre_completo', 'ci']);
+
+        foreach ($docentes as $d) {
+            if (!in_array($d->id_usuario, $idsAgregados)) {
+                $firmantes[] = ['nombre' => $d->nombre_completo, 'ci' => $d->ci, 'rol' => 'DOCENTE'];
+                $idsAgregados[] = $d->id_usuario;
             }
-            
-            $inventariador = \App\Models\User::where('rol', 'INVENTARIADOR')->where('estado', 'ACTIVO')->first();
-            if ($inventariador) {
-                $firmantes[] = ['nombre' => $inventariador->nombre_completo, 'ci' => $inventariador->ci, 'rol' => 'INVENTARIADOR'];
-            }
-            
-            $rector = \App\Models\User::where('rol', 'RECTOR')->where('estado', 'ACTIVO')->first() 
-                   ?? \App\Models\User::where('rol', 'DIRECTOR')->where('estado', 'ACTIVO')->first();
-            if ($rector) {
-                $firmantes[] = ['nombre' => $rector->nombre_completo, 'ci' => $rector->ci, 'rol' => 'RECTOR'];
-            }
-            
-            if (empty($firmantes)) {
-                $firmantes = [
-                    ['nombre' => 'Responsable del Ambiente', 'ci' => '—', 'rol' => 'CUSTODIO'],
-                    ['nombre' => 'Docente Laboratorio', 'ci' => '—', 'rol' => 'DOCENTE'],
-                    ['nombre' => 'Dirección Administrativa', 'ci' => '—', 'rol' => 'ADMINISTRADORA'],
-                    ['nombre' => 'Inventariador', 'ci' => '—', 'rol' => 'INVENTARIADOR'],
-                    ['nombre' => 'Director/Rector', 'ci' => '—', 'rol' => 'RECTOR'],
-                ];
-            }
-            
-            $cols = 3;
-            $chunks = array_chunk($firmantes, $cols);
-        @endphp
-        
+        }
+
+        // 4. ADMINISTRADORA (Ana Lía Zapana Cortez)
+        $admin = \App\Models\User::where('rol', 'ADMINISTRADOR')->where('estado', 'ACTIVO')->first();
+        if ($admin && !in_array($admin->id_usuario, $idsAgregados)) {
+            $firmantes[] = ['nombre' => $admin->nombre_completo, 'ci' => $admin->ci, 'rol' => 'ADMINISTRADORA'];
+            $idsAgregados[] = $admin->id_usuario;
+        }
+
+        // 5. INVENTARIADOR (Juan Carlos Osco Mamani)
+        $inventariador = \App\Models\User::where('rol', 'INVENTARIADOR')->where('estado', 'ACTIVO')->first();
+        if ($inventariador && !in_array($inventariador->id_usuario, $idsAgregados)) {
+            $firmantes[] = ['nombre' => $inventariador->nombre_completo, 'ci' => $inventariador->ci, 'rol' => 'INVENTARIADOR'];
+            $idsAgregados[] = $inventariador->id_usuario;
+        }
+
+        // 6. RECTOR (Jimmy Ovidio Sirpa Choque)
+        $rector = \App\Models\User::where('rol', 'RECTOR')->where('estado', 'ACTIVO')->first()
+               ?? \App\Models\User::where('rol', 'DIRECTOR')->where('estado', 'ACTIVO')->first();
+        if ($rector && !in_array($rector->id_usuario, $idsAgregados)) {
+            $firmantes[] = ['nombre' => $rector->nombre_completo, 'ci' => $rector->ci, 'rol' => 'RECTOR'];
+            $idsAgregados[] = $rector->id_usuario;
+        }
+
+        // Fallback si no hay nadie
+        if (empty($firmantes)) {
+            $firmantes = [
+                ['nombre' => 'Responsable del Ambiente', 'ci' => '—', 'rol' => 'CUSTODIO'],
+                ['nombre' => 'Docente Laboratorio', 'ci' => '—', 'rol' => 'DOCENTE'],
+                ['nombre' => 'Dirección Administrativa', 'ci' => '—', 'rol' => 'ADMINISTRADORA'],
+                ['nombre' => 'Inventariador', 'ci' => '—', 'rol' => 'INVENTARIADOR'],
+                ['nombre' => 'Director/Rector', 'ci' => '—', 'rol' => 'RECTOR'],
+            ];
+        }
+
+        $cols = 3;
+        $chunks = array_chunk($firmantes, $cols);
+    @endphp
+
+    <table class="firmas" style="margin-top: 15px; width: 100%; border-collapse: collapse;">
         @foreach ($chunks as $rowIndex => $fila)
             <tr>
                 @foreach ($fila as $f)
