@@ -294,7 +294,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="brand">
             <span
-                style="display:inline-flex;width:32px;height:32px;background:#2563eb;border-radius:8px;align-items:center;justify-content:center;font-size:16px;">Ÿ¦</span>
+                style="display:inline-flex;width:32px;height:32px;background:#2563eb;border-radius:8px;align-items:center;justify-content:center;font-size:16px;">📦</span>
             SISActivos
         </div>
 
@@ -381,11 +381,11 @@
             @endif
             <a href="{{ route('categorias.index') }}"
                 class="nav-item {{ request()->routeIs('categorias.*') ? 'active' : '' }}">
-                Ÿ¦ Categoras
+                📦 Categoras
             </a>
             <a href="{{ route('activos.index') }}"
                 class="nav-item {{ request()->routeIs('activos.*') && !request()->routeIs('activos.no-activos') ? 'active' : '' }}">
-                Ÿ¦ Activos
+                📦 Activos
             </a>
 
             {{--  NUEVO: No Activos --}}
@@ -803,6 +803,7 @@
 </body>
 
 </html>
+
 
 
 
