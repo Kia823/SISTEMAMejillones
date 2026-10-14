@@ -256,7 +256,7 @@
             }
         }
 
-        /* ============ ANIMACIÃ“N DEL ÃCONO DE BIENVENIDA ============ */
+        /* ============ ANIMACIÃ“N DEL ÍCONO DE BIENVENIDA ============ */
         @keyframes successPop {
             0% {
                 transform: scale(0) rotate(-180deg);
@@ -537,7 +537,7 @@
                 {{-- Contenido principal --}}
                 <div style="padding: 40px 32px 24px; text-align: center;">
 
-                    {{-- Ãcono animado --}}
+                    {{-- Ícono animado --}}
                     <div
                         style="position: relative; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
                         <span
