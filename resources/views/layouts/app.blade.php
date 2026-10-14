@@ -322,7 +322,7 @@
             @forelse($__carreras as $car)
                 <a href="{{ route('carreras.show', $car->id_carrera) }}"
                     class="nav-item {{ request()->routeIs('carreras.show') && request()->route('id_carrera') == $car->id_carrera ? 'active' : '' }}">
-                    ŸŽ {{ $car->nombre }}
+                    🔍Ž {{ $car->nombre }}
                 </a>
             @empty
                 <div style="padding: 8px 14px; font-size: 12px; color: #64748b; font-style: italic;">
@@ -336,7 +336,7 @@
             @if ($__user->puedeRegistrarVerificacion())
                 <a href="{{ route('verificaciones.index') }}"
                     class="nav-item {{ request()->routeIs('verificaciones.*') && !request()->routeIs('verificaciones-aprobacion.*') ? 'active' : '' }}">
-                    Ÿ Verificación Física
+                    🔍 Verificación Física
                     <span id="offline-pendientes"
                         style="display: none; background: #f59e0b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;"
                         title="Verificaciones guardadas en este equipo, pendientes de enviar">0</span>
@@ -363,7 +363,7 @@
             @if ($__user->puedeSolicitarBajaOTransferencia())
                 <a href="{{ route('actas.baja.index') }}"
                     class="nav-item {{ request()->routeIs('actas.baja.*') ? 'active' : '' }}">
-                    Ÿ„ Actas de Baja
+                    🔍„ Actas de Baja
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -372,7 +372,7 @@
 
                 <a href="{{ route('actas.transferencia.index') }}"
                     class="nav-item {{ request()->routeIs('actas.transferencia.*') ? 'active' : '' }}">
-                    Ÿ„ Transferencias
+                    🔍„ Transferencias
                     @if ($__user->puedeAprobar())
                         <span
                             style="background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800;">APRUEBA</span>
@@ -391,11 +391,11 @@
             {{--  NUEVO: No Activos --}}
             <a href="{{ route('activos.noActivos') }}"
                 class="nav-item {{ request()->routeIs('activos.no-activos') ? 'active' : '' }}">
-                Ÿš No Activos
+                🔍š No Activos
             </a>
             <a href="{{ route('activos.baja') }}"
                 class="nav-item {{ request()->routeIs('activos.baja') ? 'active' : '' }}">
-                Ÿ—‘ï Activos de Baja
+                🔍—‘ï Activos de Baja
             </a>
             <a href="{{ route('items.index') }}" class="nav-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
                 🏷️ Ítems
@@ -409,7 +409,7 @@
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera())
                 <a href="{{ route('actas.liberacion.index') }}"
                     class="nav-item {{ request()->routeIs('actas.liberacion.*') ? 'active' : '' }}">
-                    Ÿš Liberación
+                    🔍š Liberación
 
             @endif
 
@@ -421,7 +421,7 @@
 
                 <a href="{{ route('backup.index') }}"
                     class="nav-item {{ request()->routeIs('backup.*') ? 'active' : '' }}">
-                    Ÿ’¾ Copias de Seguridad
+                    🔍’¾ Copias de Seguridad
                 </a>
 
                 <a href="{{ route('configuracion.index') }}"
@@ -469,7 +469,7 @@
                             onfocus="this.style.background='#ffffff'; this.style.borderColor='#2563eb';"
                             onblur="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';">
                         <span
-                            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none;">Ÿ</span>
+                            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none;">🔍</span>
                     </div>
 
                     <button type="submit"
@@ -487,7 +487,7 @@
                             style="width: 42px; height: 42px; background-color: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15); transition: all 0.2s ease;"
                             onmouseover="this.style.backgroundColor='#2563eb'; this.style.color='#fff';"
                             onmouseout="this.style.backgroundColor='#eff6ff'; this.style.color='#2563eb';">
-                            Ÿ‘
+                            🔍‘
 
                     @endif
 
@@ -510,7 +510,7 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{-- ŸŽ‰ MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
+    {{-- 🔍Ž‰ MODAL DE BIENVENIDA (aparece solo tras login exitoso) --}}
     {{-- ============================================================ --}}
     @if (session('login_success'))
         <div id="welcome-modal"
@@ -721,7 +721,7 @@
         });
 
         // ============================================================
-        // ŸŽ‰ MODAL DE BIENVENIDA
+        // 🔍Ž‰ MODAL DE BIENVENIDA
         // ============================================================
         @if (session('login_success'))
             (function() {
@@ -736,7 +736,7 @@
                 try {
                     const audio = new Audio("{{ asset('audios/bienvenido.mp3') }}");
                     audio.volume = 0.7;
-                    audio.play().catch(e => console.log('Ÿ‡ Audio bloqueado:', e.message));
+                    audio.play().catch(e => console.log('🔍‡ Audio bloqueado:', e.message));
                 } catch (e) {
                     console.error('Error al reproducir audio:', e);
                 }
@@ -803,6 +803,7 @@
 </body>
 
 </html>
+
 
 
 
