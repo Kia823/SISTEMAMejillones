@@ -769,6 +769,5 @@ class ActivoController extends Controller
          ->sortBy('nombre_completo');
 
          return response()->json($custodios);
-     }
- }
-}
+      }
+  }
