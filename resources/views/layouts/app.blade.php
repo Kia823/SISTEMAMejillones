@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="SISActivos - Sistema de Control y Gestión de Activos Fijos">
+    <meta name="description" content="SISActivos - Sistema de Control y GestiÃ³n de Activos Fijos">
     <meta name="theme-color" content="#2563eb">
     <link rel="manifest" href="/manifest.json">
-    <title>@yield('title', 'SISActivos') - Sistema de Control y Gestión</title>
+    <title>@yield('title', 'SISActivos') - Sistema de Control y GestiÃ³n</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    {{-- Cola local: permite escanear y registrar sin conexión --}}
+    {{-- Cola local: permite escanear y registrar sin conexiÃ³n --}}
     @vite(['resources/js/offline.js'])
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -180,7 +180,7 @@
             padding: 24px 32px 32px;
         }
 
-        /* ============ BOTÓN MOBILE MENU ============ */
+        /* ============ BOTÃ“N MOBILE MENU ============ */
         .mobile-menu-toggle {
             display: none;
             width: 42px;
@@ -272,7 +272,7 @@
             }
         }
 
-        /* ============ ANIMACIÓN DEL ICONO DE BIENVENIDA ============ */
+        /* ============ ANIMACIÃ“N DEL ICONO DE BIENVENIDA ============ */
         @keyframes successPop {
             0% {
                 transform: scale(0) rotate(-180deg);
@@ -303,7 +303,7 @@
     {{-- Barra de carga global --}}
     <div class="loading-bar" id="loadingBar"></div>
 
-    {{-- Overlay para menú móvil --}}
+    {{-- Overlay para menÃº mÃ³vil --}}
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     {{-- ============ SIDEBAR ============ --}}
@@ -432,7 +432,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
-                Categorías
+                CategorÃ­as
             </a>
 
             <a href="{{ route('activos.index') }}"
@@ -468,7 +468,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                Ítems
+                Ãtems
             </a>
 
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera() || $__user->esCustodio())
@@ -489,13 +489,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Liberación
+                    LiberaciÃ³n
                 </a>
             @endif
 
-            {{-- ADMINISTRACIÓN --}}
+            {{-- ADMINISTRACIÃ“N --}}
             @if ($__user->esAdmin())
-                <div class="menu-category">ADMINISTRACIÓN</div>
+                <div class="menu-category">ADMINISTRACIÃ“N</div>
 
                 <a href="{{ route('backup.index') }}"
                     class="nav-item {{ request()->routeIs('backup.*') ? 'active' : '' }}">
@@ -514,13 +514,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    Configuración
+                    ConfiguraciÃ³n
                 </a>
             @endif
 
             <form action="{{ route('logout') }}" method="POST" class="logout-form">
                 @csrf
-                <button type="submit">Cerrar sesión</button>
+                <button type="submit">Cerrar sesiÃ³n</button>
             </form>
         @endauth
     </aside>
@@ -533,14 +533,14 @@
 
             <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px; max-width: 800px;">
 
-                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menú">
+                <button type="button" class="mobile-menu-toggle" onclick="toggleSidebar()" title="Abrir menÃº">
                     <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
 
-                {{-- ÚNICO BOTÓN "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
+                {{-- ÃšNICO BOTÃ“N "Volver" QUE REGRESA EXACTAMENTE DE DONDE SALISTE --}}
                 @if (!request()->is('/') && !request()->is('dashboard'))
                     <button type="button" onclick="history.back()" title="Volver"
                         style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 16px; border-radius: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; text-decoration: none; transition: all 0.2s ease;"
@@ -557,7 +557,7 @@
                     style="display: flex; align-items: center; gap: 8px; flex: 1; margin: 0;">
                     <div style="position: relative; flex: 1;">
                         <input type="text" name="buscar" value="{{ request('buscar') }}"
-                            placeholder="Buscar activo por código, nombre, serie, marca..." autocomplete="off"
+                            placeholder="Buscar activo por cÃ³digo, nombre, serie, marca..." autocomplete="off"
                             style="width: 100%; height: 42px; padding: 0 42px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none; background: #f8fafc; color: #0f172a; transition: all 0.2s ease;"
                             onfocus="this.style.background='#ffffff'; this.style.borderColor='#2563eb';"
                             onblur="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';">
@@ -581,7 +581,7 @@
             <div style="display: flex; align-items: center; gap: 16px;">
                 @auth
                     @if (auth()->user()->esAdmin())
-                        <a href="{{ route('usuarios.index') }}" title="Gestión de Usuarios"
+                        <a href="{{ route('usuarios.index') }}" title="GestiÃ³n de Usuarios"
                             style="width: 42px; height: 42px; background-color: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15); transition: all 0.2s ease;"
                             onmouseover="this.style.backgroundColor='#2563eb'; this.style.color='#fff';"
                             onmouseout="this.style.backgroundColor='#eff6ff'; this.style.color='#2563eb';">
@@ -625,7 +625,7 @@
                     style="height: 8px; background: linear-gradient(90deg, #34d399, #14b8a6, #34d399); animation: pulse 2s ease-in-out infinite;">
                 </div>
 
-                {{-- Botón cerrar --}}
+                {{-- BotÃ³n cerrar --}}
                 <button type="button" onclick="cerrarModalBienvenida()"
                     style="position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f1f5f9; color: #475569; border: none; cursor: pointer; z-index: 10; transition: all 0.2s;"
                     onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
@@ -653,12 +653,12 @@
                         </span>
                     </div>
 
-                    {{-- Título --}}
+                    {{-- TÃ­tulo --}}
                     <h2 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-                        ¡Acceso Correcto!
+                        Â¡Acceso Correcto!
                     </h2>
                     <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">
-                        Has iniciado sesión exitosamente
+                        Has iniciado sesiÃ³n exitosamente
                     </p>
 
                     {{-- Card del usuario --}}
@@ -734,7 +734,7 @@
         })();
 
         // ============================================================
-        // MENÚ MÓVIL
+        // MENÃš MÃ“VIL
         // ============================================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -746,13 +746,13 @@
         document.getElementById('sidebarOverlay')?.addEventListener('click', toggleSidebar);
 
         // ============================================================
-        // SWEET ALERT - Mensajes de sesión
+        // SWEET ALERT - Mensajes de sesiÃ³n
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             @if (session('status'))
                 Swal.fire({
                     icon: 'success',
-                    title: '¡Éxito!',
+                    title: 'Â¡Ã‰xito!',
                     text: @json(session('status')),
                     timer: 3000,
                     showConfirmButton: false
@@ -761,7 +761,7 @@
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
-                    title: '¡Éxito!',
+                    title: 'Â¡Ã‰xito!',
                     text: @json(session('success')),
                     timer: 3000,
                     showConfirmButton: false
@@ -777,31 +777,31 @@
             @if (session('warning'))
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Atención',
+                    title: 'AtenciÃ³n',
                     text: @json(session('warning'))
                 });
             @endif
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
-                    title: 'Errores de validación',
+                    title: 'Errores de validaciÃ³n',
                     html: `<ul style="text-align:left; font-size:13px;">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>`
                 });
             @endif
         });
 
         // ============================================================
-        // CONFIRMAR ELIMINACIÓN
+        // CONFIRMAR ELIMINACIÃ“N
         // ============================================================
         function confirmDelete(formId) {
             Swal.fire({
-                title: '¿Estás seguro de eliminar?',
-                text: '¡Esta acción no se puede deshacer!',
+                title: 'Â¿EstÃ¡s seguro de eliminar?',
+                text: 'Â¡Esta acciÃ³n no se puede deshacer!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'Sí, eliminar',
+                confirmButtonText: 'SÃ­, eliminar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -842,7 +842,7 @@
                     console.error('Error al reproducir audio:', e);
                 }
 
-                // Mostrar modal con animación
+                // Mostrar modal con animaciÃ³n
                 requestAnimationFrame(() => {
                     modal.style.opacity = '1';
                     card.style.transform = 'scale(1)';
@@ -861,7 +861,7 @@
                     cerrarModalBienvenida();
                 }, DURACION_MS);
 
-                // Función global para cerrar
+                // FunciÃ³n global para cerrar
                 window.cerrarModalBienvenida = function() {
                     clearTimeout(timeoutId);
                     modal.style.opacity = '0';
@@ -886,7 +886,7 @@
                     }
                 });
 
-                // LIMPIAR EL FLAG DESPUÉS DE MOSTRAR EL MODAL
+                // LIMPIAR EL FLAG DESPUÃ‰S DE MOSTRAR EL MODAL
                 setTimeout(() => {
                     fetch('{{ route('login.clear-welcome') }}', {
                         method: 'POST',
