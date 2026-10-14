@@ -398,7 +398,6 @@
                 ðŸ—‘ï¸ Activos de Baja
             </a>
             <a href="{{ route('items.index') }}" class="nav-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
-            <a href="{{ route('items.index') }}" class="nav-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
                 ðŸ·ï¸ Ãtems
             </a>
             @if ($__user->esAdmin() || $__user->esOperativo() || $__user->esJefeCarrera() || $__user->esCustodio())
