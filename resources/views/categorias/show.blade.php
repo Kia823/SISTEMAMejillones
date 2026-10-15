@@ -244,18 +244,18 @@
                         <div class="af-error" data-for="crear-codigo-activo"></div>
                     </div>
 
-                    <div>
-                        <label class="af-label">Categoría (Ambiente) *</label>
-                        <select name="id_categoria" id="crear-id-categoria" class="af-input">
-                            <option value="">— Seleccionar categoría —</option>
-                            @foreach (\App\Models\Categoria::where('id_ambiente', $ambiente->id_ambiente ?? 0)->orderBy('nombre')->get() as $cat)
-                                <option value="{{ $cat->id_categoria }}" {{ (isset($categoria) && $categoria->id_categoria == $cat->id_categoria) ? 'selected' : '' }}>
-                                    [{{ $cat->codigo }}] {{ $cat->nombre }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <div class="af-error" data-for="crear-id-categoria"></div>
-                    </div>
+                     <div>
+                         <label class="af-label">Categoría (Ambiente) *</label>
+                         <select name="id_categoria" id="crear-id-categoria" class="af-input">
+                             <option value="">— Seleccionar categoría —</option>
+                             @foreach (\App\Models\Categoria::where('id_ambiente', $ambiente->id_ambiente ?? 0)->orderBy('nombre')->get() as $cat)
+                                 <option value="{{ $cat->id_categoria }}" data-ambiente="{{ $cat->ambiente->id_ambiente }}" {{ (isset($categoria) && $categoria->id_categoria == $cat->id_categoria) ? 'selected' : '' }}>
+                                     [{{ $cat->codigo }}] {{ $cat->nombre }}
+                                 </option>
+                             @endforeach
+                         </select>
+                         <div class="af-error" data-for="crear-id-categoria"></div>
+                     </div>
 
                     <div>
                         <label class="af-label">Cantidad *</label>
@@ -413,16 +413,18 @@
                         <div class="af-error" data-for="edit-codigo-activo"></div>
                     </div>
 
-                    <div>
-                        <label class="af-label">Categoría (Ambiente) *</label>
-                        <select name="id_categoria" id="edit-id-categoria" class="af-input">
-                            <option value="">— Seleccionar categoría —</option>
-                            @foreach (\App\Models\Categoria::where('id_ambiente', $ambiente->id_ambiente ?? 0)->orderBy('nombre')->get() as $cat)
-                                <option value="{{ $cat->id_categoria }}">[{{ $cat->codigo }}] {{ $cat->nombre }}</option>
-                            @endforeach
-                        </select>
-                        <div class="af-error" data-for="edit-id-categoria"></div>
-                    </div>
+                     <div>
+                         <label class="af-label">Categoría (Ambiente) *</label>
+                         <select name="id_categoria" id="edit-id-categoria" class="af-input">
+                             <option value="">— Seleccionar categoría —</option>
+                             @foreach (\App\Models\Categoria::where('id_ambiente', $ambiente->id_ambiente ?? 0)->orderBy('nombre')->get() as $cat)
+                                 <option value="{{ $cat->id_categoria }}" data-ambiente="{{ $cat->ambiente->id_ambiente }}">
+                                     [{{ $cat->codigo }}] {{ $cat->nombre }}
+                                 </option>
+                             @endforeach
+                         </select>
+                         <div class="af-error" data-for="edit-id-categoria"></div>
+                     </div>
 
                     <div>
                         <label class="af-label">Cantidad *</label>
@@ -602,15 +604,49 @@
              }
          }
 
-         function filtrarCustodiosEditModal(texto) {
-             const filtro = texto.toLowerCase().trim();
-             const select = document.getElementById('edit-id-custodios');
-             for (let i = 0; i < select.options.length; i++) {
-                 const opt = select.options[i];
-                 const busqueda = opt.getAttribute('data-busqueda') || "";
-                 opt.style.display = busqueda.includes(filtro) ? "" : "none";
-             }
-         }
+          function filtrarCustodiosEditModal(texto) {
+              const filtro = texto.toLowerCase().trim();
+              const select = document.getElementById('edit-id-custodios');
+              for (let i = 0; i < select.options.length; i++) {
+                  const opt = select.options[i];
+                  const busqueda = opt.getAttribute('data-busqueda') || "";
+                  opt.style.display = busqueda.includes(filtro) ? "" : "none";
+              }
+          }
+
+          // ============================================
+          // AUTO-SELECCIONAR CUSTODIOS POR AMBIENTE
+          // ============================================
+          function autoSeleccionarCustodiosPorAmbiente(ambienteId) {
+              if (!ambienteId) {
+                  // Limpiar selección si no hay ambiente
+                  document.getElementById('crear-id-custodios').value = [];
+                  return;
+              }
+
+              // Hacer petición fetch para obtener custodios del ambiente
+              fetch('/activos/custodios-por-ambiente/' + ambienteId)
+                  .then(response => {
+                      if (!response.ok) {
+                          throw new Error('Network response was not ok');
+                      }
+                      return response.json();
+                  })
+                  .then(data => {
+                      const select = document.getElementById('crear-id-custodios');
+                      if (data && data.length > 0) {
+                          const ids = data.map(item => String(item.id));
+                          select.value = ids;
+                      } else {
+                          select.value = [];
+                      }
+                  })
+                  .catch(error => {
+                      console.error('Error fetching custodios por ambiente:', error);
+                      // En caso de error, limpiar selección
+                      document.getElementById('crear-id-custodios').value = [];
+                  });
+          }
 
         function validar(tipoBien, prefijo) {
             limpiarTodosLosErrores();
@@ -868,6 +904,42 @@
         document.addEventListener('DOMContentLoaded', () => {
             cambiarTipoBien('ACTIVO_FIJO');
             cambiarTipoBienEdit('ACTIVO_FIJO');
+            
+            // Auto-seleccionar custodios basado en el ambiente al cargar el modal
+            const ambienteId = {{ $ambiente->id_ambiente ?? 0 }};
+            if (ambienteId) {
+                autoSeleccionarCustodiosPorAmbiente(ambienteId);
+            }
+            
+            // También actualizar custodios cuando cambie la categoría en el modal de creación
+            const crearCategoriaSelect = document.getElementById('crear-id-categoria');
+            if (crearCategoriaSelect) {
+                crearCategoriaSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const ambienteId = selectedOption.getAttribute('data-ambiente');
+                    if (ambienteId) {
+                        autoSeleccionarCustodiosPorAmbiente(ambienteId);
+                    } else {
+                        // Si no hay ambiente seleccionado, limpiar la selección de custodios
+                        document.getElementById('crear-id-custodios').value = [];
+                    }
+                });
+            }
+            
+            // También actualizar custodios cuando cambie la categoría en el modal de edición
+            const editCategoriaSelect = document.getElementById('edit-id-categoria');
+            if (editCategoriaSelect) {
+                editCategoriaSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const ambienteId = selectedOption.getAttribute('data-ambiente');
+                    if (ambienteId) {
+                        autoSeleccionarCustodiosPorAmbiente(ambienteId);
+                    } else {
+                        // Si no hay ambiente seleccionado, limpiar la selección de custodios
+                        document.getElementById('edit-id-custodios').value = [];
+                    }
+                });
+            }
         });
     </script>
 @endsection

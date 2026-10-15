@@ -421,13 +421,14 @@
          aplicarTipoBien(checked ? checked.value : 'ACTIVO_FIJO');
      })();
 
-     // Aplicar filtros iniciales de ambiente y custodios al cargar
-     (function() {
-         const ambienteSelect = document.getElementById('id_ambiente');
-         if (ambienteSelect.value) {
-             filtrarCategoriasPorAmbiente(ambienteSelect.value);
-         }
-     })();
+      // Aplicar filtros iniciales de ambiente y custodios al cargar
+      (function() {
+          const ambienteSelect = document.getElementById('id_ambiente');
+          if (ambienteSelect.value) {
+              filtrarCategoriasPorAmbiente(ambienteSelect.value);
+              autoSeleccionarCustodiosPorAmbiente(ambienteSelect.value);
+          }
+      })();
 
     // ============================================
     // VALIDACIÓN AL ENVIAR
