@@ -293,28 +293,28 @@
             return;
         }
 
-        // Hacer petición fetch para obtener custodios del ambiente
-        fetch('/activos/custodios-por-ambiente/' + ambienteId)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const select = document.getElementById('id_custodios');
-                if (data && data.length > 0) {
-                    const ids = data.map(item => String(item.id));
-                    select.value = ids;
-                } else {
-                    select.value = [];
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching custodios por ambiente:', error);
-                // En caso de error, limpiar selección
-                document.getElementById('id_custodios').value = [];
-            });
+          // Hacer petición fetch para obtener custodios del ambiente
+          fetch('/activos/custodios-por-ambiente/' + ambienteId)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  const select = document.getElementById('id_custodios');
+                  if (data && data.length > 0) {
+                      const ids = data.map(item => String(item.id_usuario));
+                      select.value = ids;
+                  } else {
+                      select.value = [];
+                  }
+              })
+              .catch(error => {
+                  console.error('Error fetching custodios por ambiente:', error);
+                  // En caso de error, limpiar selección
+                  document.getElementById('id_custodios').value = [];
+              });
     }
 
     // ============================================
@@ -422,13 +422,13 @@
      })();
 
       // Aplicar filtros iniciales de ambiente y custodios al cargar
-      (function() {
+      document.addEventListener('DOMContentLoaded', function() {
           const ambienteSelect = document.getElementById('id_ambiente');
           if (ambienteSelect.value) {
               filtrarCategoriasPorAmbiente(ambienteSelect.value);
               autoSeleccionarCustodiosPorAmbiente(ambienteSelect.value);
           }
-      })();
+      });
 
     // ============================================
     // VALIDACIÓN AL ENVIAR

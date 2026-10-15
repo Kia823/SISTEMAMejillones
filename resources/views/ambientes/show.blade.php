@@ -17,7 +17,46 @@
         <div>
             <div style="display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.18);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Ambiente</div>
             <h1 style="margin:10px 0 8px;font-size:28px;">{{ $ambiente->nombre }} <span style="font-size: 18px; opacity: 0.85;">({{ $ambiente->codigo ?? 'S/C' }})</span></h1>
-            <p>Administra las categorías y activos de este espacio.</p>
+              <p>Administra las categorías y activos de este espacio.</p>
+               @php
+                     // Get custodios from activos and ítems (new system)
+                     $custodiosDesdeActivosYItems = \App\Models\User::whereHas('activosCustodiados.ambiente', function($q) use ($ambiente) {
+                         $q->where('id_ambiente', $ambiente->id_ambiente);
+                     })
+                     ->orWhereHas('itemsVigentes', function($q) use ($ambiente) {
+                         $q->where('items.id_ambiente', $ambiente->id_ambiente);
+                     })
+                     ->where('estado', 'ACTIVO')
+                     ->get(['usuarios.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci']);
+                   
+                    // Get custodios from direct ambiente assignments (old system - for backward compatibility)
+                    $custodiosDesdeAsignacionDirecta = $ambiente->custodios()->where('estado', 'ACTIVO')->get(['ambiente_user.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci']);
+                   
+                   // Combine and remove duplicates
+                   $custodios = $custodiosDesdeActivosYItems->merge($custodiosDesdeAsignacionDirecta)->unique('id_usuario');
+               @endphp
+              @if($custodios->count() > 0)
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-top: 16px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                          <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0;">👥 Custodios Asignados</h3>
+                          <span style="font-size: 14px; color: #64748b;">{{ $custodios->count() }} custodios</span>
+                      </div>
+                      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                          @foreach($custodios as $custodio)
+                              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; align-items: center; min-width: 120px;">
+                                  <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">{{ $custodio->nombre_completo }}</div>
+                                  <div style="font-size: 11px; color: #64748b;">C.I.: {{ $custodio->ci }}</div>
+                              </div>
+                          @endforeach
+                      </div>
+                  </div>
+              @else
+                  <div style="background: #fffbeb; border: 1px solid #fed7aa; border-radius: 12px; padding: 16px; margin-top: 16px; text-align: center;">
+                      <p style="color: #92400e; margin: 0; font-size: 14px;">
+                          ⚠️ No hay custodios asignados a este ambiente.
+                      </p>
+                  </div>
+              @endif
         </div>
         <div class="stat-grid" style="display: flex; gap: 10px; flex-wrap: wrap;">
             <div style="background: rgba(15, 23, 42, 0.35); border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 16px; border-radius: 12px; text-align: center; min-width: 80px;">

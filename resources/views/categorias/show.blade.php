@@ -614,39 +614,39 @@
               }
           }
 
-          // ============================================
-          // AUTO-SELECCIONAR CUSTODIOS POR AMBIENTE
-          // ============================================
-          function autoSeleccionarCustodiosPorAmbiente(ambienteId) {
-              if (!ambienteId) {
-                  // Limpiar selección si no hay ambiente
-                  document.getElementById('crear-id-custodios').value = [];
-                  return;
-              }
+           // ============================================
+           // AUTO-SELECCIONAR CUSTODIOS POR AMBIENTE
+           // ============================================
+           function autoSeleccionarCustodiosPorAmbiente(ambienteId) {
+               if (!ambienteId) {
+                   // Limpiar selección si no hay ambiente
+                   document.getElementById('crear-id-custodios').value = [];
+                   return;
+               }
 
-              // Hacer petición fetch para obtener custodios del ambiente
-              fetch('/activos/custodios-por-ambiente/' + ambienteId)
-                  .then(response => {
-                      if (!response.ok) {
-                          throw new Error('Network response was not ok');
-                      }
-                      return response.json();
-                  })
-                  .then(data => {
-                      const select = document.getElementById('crear-id-custodios');
-                      if (data && data.length > 0) {
-                          const ids = data.map(item => String(item.id));
-                          select.value = ids;
-                      } else {
-                          select.value = [];
-                      }
-                  })
-                  .catch(error => {
-                      console.error('Error fetching custodios por ambiente:', error);
-                      // En caso de error, limpiar selección
-                      document.getElementById('crear-id-custodios').value = [];
-                  });
-          }
+               // Hacer petición fetch para obtener custodios del ambiente
+               fetch('/activos/custodios-por-ambiente/' + ambienteId)
+                   .then(response => {
+                       if (!response.ok) {
+                           throw new Error('Network response was not ok');
+                       }
+                       return response.json();
+                   })
+                   .then(data => {
+                       const select = document.getElementById('crear-id-custodios');
+                       if (data && data.length > 0) {
+                           const ids = data.map(item => String(item.id_usuario));
+                           select.value = ids;
+                       } else {
+                           select.value = [];
+                       }
+                   })
+                   .catch(error => {
+                       console.error('Error fetching custodios por ambiente:', error);
+                       // En caso de error, limpiar selección
+                       document.getElementById('crear-id-custodios').value = [];
+                   });
+           }
 
         function validar(tipoBien, prefijo) {
             limpiarTodosLosErrores();

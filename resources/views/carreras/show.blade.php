@@ -1,10 +1,9 @@
 @extends('layouts.app')
-
 @section('content')
 @php use Illuminate\Support\Str; @endphp
 
     @if (session('success'))
-        <div style="background: #dcfce7; border: 1px solid #bbf7d0; color: #166534; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="background: #dcfce7; border: 1px solid #bbf7d0; color: #166534; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
             <svg style="width: 20px; height: 20px; color: #16a34a;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
             </svg>
@@ -72,68 +71,85 @@
             </style>
 
             <div class="folders-grid">
-    @foreach ($ambientes as $amb)
-        <div class="folder-card" ondblclick="window.location.href='{{ route('ambientes.show', $amb->id_ambiente) }}'">
+                @foreach ($ambientes as $amb)
+                    @php
+                     // Get custodios from activos y ítems (new system)
+                     $custodiosDesdeActivosYItems = \App\Models\User::whereHas('activosCustodiados.ambiente', function($q) use ($amb) {
+                         $q->where('id_ambiente', $amb->id_ambiente);
+                     })
+                     ->orWhereHas('itemsVigentes', function($q) use ($amb) {
+                         $q->where('items.id_ambiente', $amb->id_ambiente);
+                     })
+                     ->where('estado', 'ACTIVO')
+                     ->get(['usuarios.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci']);
+                        
+                         // Get custodios from direct ambiente assignments (old system - for backward compatibility)
+                         $custodiosDesdeAsignacionDirecta = $amb->custodios()->where('estado', 'ACTIVO')->get(['ambiente_user.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci']);
+                        
+                        // Combine and remove duplicates
+                        $custodiosCombinados = $custodiosDesdeActivosYItems->merge($custodiosDesdeAsignacionDirecta)->unique('id_usuario');
+                    @endphp
+                    <div class="folder-card" ondblclick="window.location.href='{{ route('ambientes.show', $amb->id_ambiente) }}'">
 
-            {{-- ⭐ BOTÓN ARRINCONADO ARRIBA A LA DERECHA --}}
-            @if (auth()->check() && auth()->user()->rol === 'ADMINISTRADOR')
-                <button type="button" onclick="event.stopPropagation(); openAsignarCustodiosModal('{{ $amb->id_ambiente }}', '{{ addslashes($amb->nombre) }}', @json(collect($amb->custodios)->pluck('id_usuario')))"
-                    style="position: absolute; top: 12px; right: 12px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; z-index: 5;">
-                    👥 Asignar
-                </button>
-            @endif
+                        {{-- ⭐ BOTÓN ARRINCONADO ARRIBA A LA DERECHA --}}
+                        @if (auth()->check() && auth()->user()->rol === 'ADMINISTRADOR')
+                            <button type="button" onclick="event.stopPropagation(); openAsignarCustodiosModal('{{ $amb->id_ambiente }}', '{{ addslashes($amb->nombre) }}', @json(collect($custodiosCombinados)->pluck('id_usuario')))"
+                                style="position: absolute; top: 12px; right: 12px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; z-index: 5;">
+                                👥 Asignar
+                            </button>
+                        @endif
 
-            <div>
-                {{-- ⭐ Acolchado a la derecha (padding-right: 75px) para que el botón no tape el código --}}
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-right: 75px;">
-                    <span style="font-size: 28px;">📂</span>
-                    <span style="font-size: 10px; font-weight: 800; background: #eff6ff; color: #1d4ed8; padding: 2px 6px; border-radius: 4px;">
-                        {{ $amb->codigo ?? 'S/C' }}
-                    </span>
-                </div>
+                        <div>
+                            {{-- ⭐ Acolchado a la derecha (padding-right: 75px) para que el botón no tape el código --}}
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-right: 75px;">
+                                <span style="font-size: 28px;">📂</span>
+                                <span style="font-size: 10px; font-weight: 800; background: #eff6ff; color: #1d4ed8; padding: 2px 6px; border-radius: 4px;">
+                                    {{ $amb->codigo ?? 'S/C' }}
+                                </span>
+                            </div>
 
-                <h3 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">{{ $amb->nombre }}</h3>
-                <p style="font-size: 11px; color: #64748b; margin: 0 0 10px 0;">{{ $amb->bloque ? 'Bloque ' . $amb->bloque : 'Bloque N/A' }} · {{ $amb->piso ? 'Piso ' . $amb->piso : 'Piso N/D' }}</p>
+                            <h3 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">{{ $amb->nombre }}</h3>
+                            <p style="font-size: 11px; color: #64748b; margin: 0 0 10px 0;">{{ $amb->bloque ? 'Bloque ' . $amb->bloque : 'Bloque N/A' }} · {{ $amb->piso ? 'Piso ' . $amb->piso : 'Piso N/D' }}</p>
 
-                {{-- Múltiples Docentes Custodios --}}
-                <div style="font-size: 10px; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #f1f5f9; margin-bottom: 12px;">
-                    <span style="font-weight: 700; color: #334155; display: block; margin-bottom: 3px;">👥 Docentes Custodios:</span>
-                    @forelse($amb->custodios ?? [] as $custodio)
-                        <div style="color: #475569;">• {{ $custodio->nombre_completo }}</div>
-                    @empty
-                        <span style="color: #94a3b8; font-style: italic;">Sin custodios asignados</span>
-                    @endforelse
-                </div>
+                            {{-- Múltiples Docentes Custodios --}}
+                            <div style="font-size: 10px; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #f1f5f9; margin-bottom: 12px;">
+                                <span style="font-weight: 700; color: #334155; display: block; margin-bottom: 3px;">👥 Docentes Custodios:</span>
+                                @forelse($custodiosCombinados ?? [] as $custodio)
+                                    <div style="color: #475569;">• {{ $custodio->nombre_completo }}</div>
+                                @empty
+                                    <span style="color: #94a3b8; font-style: italic;">Sin custodios asignados</span>
+                                @endforelse
+                            </div>
+                        </div>
+
+                         {{-- Botones de edición y eliminación --}}
+                         <div style="display: flex; gap: 6px; justify-content: flex-end; border-top: 1px solid #f1f5f9; padding-top: 10px;" onclick="event.stopPropagation();">
+                            @if (auth()->check() && auth()->user()->rol === 'ADMINISTRADOR')
+                                <button type="button" onclick='editAmbiente({{ json_encode($amb, JSON_UNESCAPED_UNICODE) }})' title="Editar ambiente"
+                                    style="background:#fef9c3; color:#ca8a04; width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fde047; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor:pointer;">
+                                    ✏️
+                                </button>
+
+                                <form id="delete-form-{{ $amb->id_ambiente }}" method="POST" action="{{ route('ambientes.destroy', ['id_carrera' => $carrera->id_carrera, 'id_ambiente' => $amb->id_ambiente]) }}" style="margin: 0; display: flex;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" onclick="openDeleteModal('{{ $amb->id_ambiente }}')" title="Eliminar ambiente"
+                                        style="background:#fee2e2; color:#dc2626; width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fca5a5; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor:pointer;">
+                                        🗑️
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
             </div>
-
-            {{-- Botones de edición y eliminación --}}
-            <div style="display: flex; gap: 6px; justify-content: flex-end; border-top: 1px solid #f1f5f9; padding-top: 10px;" onclick="event.stopPropagation();">
-                @if (auth()->check() && auth()->user()->rol === 'ADMINISTRADOR')
-                    <button type="button" onclick='editAmbiente({{ json_encode($amb, JSON_UNESCAPED_UNICODE) }})' title="Editar ambiente"
-                        style="background:#fef9c3; color:#ca8a04; width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fde047; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor:pointer;">
-                        ✏️
-                    </button>
-
-                    <form id="delete-form-{{ $amb->id_ambiente }}" method="POST" action="{{ route('ambientes.destroy', ['id_carrera' => $carrera->id_carrera, 'id_ambiente' => $amb->id_ambiente]) }}" style="margin: 0; display: flex;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="button" onclick="openDeleteModal('{{ $amb->id_ambiente }}')" title="Eliminar ambiente"
-                            style="background:#fee2e2; color:#dc2626; width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fca5a5; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor:pointer;">
-                            🗑️
-                        </button>
-                    </form>
-                @endif
-            </div>
-        </div>
-    @endforeach
-</div>
         @else
             <p style="text-align: center; padding: 40px; color: #94a3b8; font-weight: 600;">No hay ambientes registrados para esta carrera.</p>
         @endif
     </section>
 
     {{-- ============================================================ --}}
-    {{-- MODAL ASIGNAR CUSTODIOS (BÚSQUEDA POR ÍTEM, C.I., NOMBRE) --}}
+    {{-- MODAL ASIGNAR CUSTODIOS (BÚSQUEDA POR ÍTEM, C.I., N° de Ítem) --}}
     {{-- ============================================================ --}}
     <div id="modal-asignar-custodios" style="display: none !important; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10005; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: white; border-radius: 20px; padding: 25px; width: 100%; max-width: 550px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
@@ -182,14 +198,15 @@
 
     <!-- Modal flotante para crear/editar ambiente -->
     <div id="ambiente-modal" style="display: none !important; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative;">
+        <div style="background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
                 <h3 id="ambiente-modal-title" style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">Nuevo ambiente</h3>
-                <button type="button" onclick="closeAmbienteModal()" style="background: #f1f5f9; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; color: #475569;">×</button>
+                <button type="button" onclick="closeAmbienteModal()" style="background: #f1f5f9; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-center: center; font-size: 18px; cursor: pointer; color: #475569;">×</button>
             </div>
 
             <form id="ambiente-form" method="POST" action="{{ route('ambientes.store', ['id_carrera' => $carrera->id_carrera]) }}">
                 @csrf
+
                 <input id="ambiente-method" type="hidden" name="_method" value="POST">
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 15px;">
@@ -218,7 +235,7 @@
                         <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px; color: #334155;">Piso *</label>
                         <input id="amb-piso" name="piso" type="number" value="{{ old('piso') }}" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid {{ $errors->has('piso') ? '#dc2626' : '#cbd5e1' }};">
                         @error('piso')
-                            <span style="color: #dc2626; font-size: 11px; font-weight: 600; display: block; margin-top: 3px;">{{ $message }}</span>
+                            <span style="color: #dc2626; font-size: 11px; font-weight: 600; display: block; margin-top: 3px;>{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -246,95 +263,87 @@
 @endsection
 
 @section('scripts')
-    <script>
-        let currentAmbienteIdToDelete = null;
+<script>
+    let currentAmbienteIdToDelete = null;
 
-        // Modal Asignar Custodios
-        function openAsignarCustodiosModal(ambienteId, ambienteNombre, custodiosActuales) {
-            const modal = document.getElementById('modal-asignar-custodios');
-            const form = document.getElementById('form-asignar-custodios');
+    // Modal Asignar Custodios
+    function openAsignarCustodiosModal(ambienteId, ambienteNombre, custodiosActuales) {
+        const modal = document.getElementById('modal-asignar-custodios');
+        const form = document.getElementById('form-asignar-custodios');
 
-            form.action = '{{ url("/ambientes") }}/' + ambienteId + '/custodios';
-            document.getElementById('modal-ambiente-titulo').textContent = 'Asignar Custodios a: ' + ambienteNombre;
+        form.action = '{{ url("/ambientes") }}/' + ambienteId + '/custodios';
+        document.getElementById('modal-ambiente-titulo').textContent = 'Asignar Custodios a: ' + ambienteNombre;
 
-            document.querySelectorAll('.checkbox-docente').forEach(chk => {
-                chk.checked = custodiosActuales.includes(parseInt(chk.value));
-            });
+        document.querySelectorAll('.checkbox-docente').forEach(chk => {
+            chk.checked = custodiosActuales.includes(parseInt(chk.value));
+        });
 
-            document.getElementById('buscador-docentes').value = '';
-            filtrarDocentesModal('');
+        document.getElementById('buscador-docentes').value = '';
+        filtrarDocentesModal('');
 
-            modal.style.setProperty('display', 'flex', 'important');
-        }
+        modal.style.setProperty('display', 'flex', 'important');
+    }
 
-        function closeAsignarCustodiosModal() {
-            document.getElementById('modal-asignar-custodios').style.setProperty('display', 'none', 'important');
-        }
+    function closeAsignarCustodiosModal() {
+        document.getElementById('modal-asignar-custodios').style.setProperty('display', 'none', 'important');
+    }
 
-        function filtrarDocentesModal(texto) {
-            const filtro = texto.toLowerCase().trim();
-            document.querySelectorAll('.docente-item').forEach(item => {
-                const busqueda = item.getAttribute('data-busqueda') || "";
-                if (busqueda.includes(filtro)) {
-                    item.style.display = "flex";
-                } else {
-                    item.style.display = "none";
-                }
-            });
-        }
-
-        // Modal Ambiente
-        function openAmbienteModal() {
-            const form = document.getElementById('ambiente-form');
-            form.reset();
-            form.action = '{{ route('ambientes.store', ['id_carrera' => $carrera->id_carrera]) }}';
-            document.getElementById('ambiente-method').value = 'POST';
-            document.getElementById('ambiente-modal-title').textContent = 'Nuevo ambiente';
-            document.getElementById('ambiente-modal').style.setProperty('display', 'flex', 'important');
-        }
-
-        function closeAmbienteModal() {
-            document.getElementById('ambiente-modal').style.setProperty('display', 'none', 'important');
-        }
-
-        function editAmbiente(serialized) {
-            const amb = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
-            const form = document.getElementById('ambiente-form');
-            const carreraId = '{{ $carrera->id_carrera }}';
-            const ambienteId = amb.id_ambiente;
-
-            form.action = '{{ url('/carreras') }}/' + carreraId + '/ambientes/' + ambienteId;
-            document.getElementById('ambiente-method').value = 'PUT';
-            document.getElementById('ambiente-modal-title').textContent = 'Editar ambiente';
-            document.getElementById('amb-codigo').value = amb.codigo || '';
-            document.getElementById('amb-nombre').value = amb.nombre || '';
-            document.getElementById('amb-bloque').value = amb.bloque || '';
-            document.getElementById('amb-piso').value = amb.piso || '';
-            document.getElementById('ambiente-modal').style.setProperty('display', 'flex', 'important');
-        }
-
-        function openDeleteModal(ambienteId) {
-            currentAmbienteIdToDelete = ambienteId;
-            document.getElementById('delete-confirm-modal').style.setProperty('display', 'flex', 'important');
-        }
-
-        function closeDeleteModal() {
-            currentAmbienteIdToDelete = null;
-            document.getElementById('delete-confirm-modal').style.setProperty('display', 'none', 'important');
-        }
-
-        document.getElementById('confirm-delete-btn').addEventListener('click', function() {
-            if (currentAmbienteIdToDelete) {
-                document.getElementById('delete-form-' + currentAmbienteIdToDelete).submit();
+    function filtrarDocentesModal(texto) {
+        const filtro = texto.toLowerCase().trim();
+        document.querySelectorAll('.docente-item').forEach(item => {
+            const busqueda = item.getAttribute('data-busqueda') || "";
+            if (busqueda.includes(filtro)) {
+                item.style.display = "flex";
+            } else {
+                item.style.display = "none";
             }
         });
-    </script>
+    }
 
-    @if ($errors->any())
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.getElementById('ambiente-modal').style.setProperty('display', 'flex', 'important');
-            });
-        </script>
-    @endif
+    // Modal Ambiente
+    function openAmbienteModal() {
+        const form = document.getElementById('ambiente-form');
+        form.reset();
+        form.action = '{{ route('ambientes.store', ['id_carrera' => $carrera->id_carrera]) }}';
+        document.getElementById('ambiente-method').value = 'POST';
+        document.getElementById('ambiente-modal-title').textContent = 'Nuevo ambiente';
+        document.getElementById('ambiente-modal').style.setProperty('display', 'flex', 'important');
+    }
+
+    function closeAmbienteModal() {
+        document.getElementById('ambiente-modal').style.setProperty('display', 'none', 'important');
+    }
+
+    function editAmbiente(serialized) {
+        const amb = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
+        const form = document.getElementById('ambiente-form');
+        const carreraId = '{{ $carrera->id_carrera }}';
+        const ambienteId = amb.id_ambiente;
+
+        form.action = '{{ url('/carreras') }}/' + carreraId + '/ambientes/' + ambienteId;
+        document.getElementById('ambiente-method').value = 'PUT';
+        document.getElementById('ambiente-modal-title').textContent = 'Editar ambiente';
+        document.getElementById('amb-codigo').value = amb.codigo || '';
+        document.getElementById('amb-nombre').value = amb.nombre || '';
+        document.getElementById('amb-bloque').value = amb.bloque || '';
+        document.getElementById('amb-piso').value = amb.piso || '';
+        document.getElementById('ambiente-modal').style.setProperty('display', 'flex', 'important');
+    }
+
+    function openDeleteModal(ambienteId) {
+        currentAmbienteIdToDelete = ambienteId;
+        document.getElementById('delete-confirm-modal').setProperty('display', 'flex', 'important');
+    }
+
+    function closeDeleteModal() {
+        currentAmbienteIdToDelete = null;
+        document.getElementById('delete-confirm-modal').setProperty('display', 'none', 'important');
+    }
+
+    document.getElementById('confirm-delete-btn').addEventListener('click', function() {
+        if (currentAmbienteIdToDelete) {
+            document.getElementById('delete-form-' + currentAmbienteIdToDelete).submit();
+        }
+    });
+</script>
 @endsection
