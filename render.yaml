@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sistema-itpm
+    env: docker
+    region: oregon
+    plan: free
+    branch: main
+    numInstances: 1
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: errorlog

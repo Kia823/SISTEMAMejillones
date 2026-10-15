@@ -1,0 +1,178 @@
+<?php
+
+namespace App\Http\Controllers\Web;
+
+use App\Http\Controllers\Controller;
+use App\Models\Ambiente;
+use App\Models\ActivoFijo;
+use App\Models\Carrera;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use App\Models\Categoria;
+
+class AmbienteController extends Controller
+{
+    // ============================================================
+    // INDEX
+    // ============================================================
+    public function index($id_carrera)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $idsVisibles = $user->idsCarrerasVisibles();
+
+        abort_if(
+            ! $user->puedeVerTodasLasCarreras() && ! in_array((int) $id_carrera, array_map('intval', $idsVisibles ?: []), true),
+            403,
+            'Esa carrera no le corresponde.'
+        );
+
+        $carrera = Carrera::findOrFail($id_carrera);
+
+        $ambientes = $user->ambientesVisibles()
+            ->where('id_carrera', $carrera->id_carrera)
+            ->withCount('activos')
+            ->orderBy('nombre')
+            ->get();
+
+        return view('ambientes.index', compact('ambientes', 'carrera'));
+    }
+
+    // ============================================================
+    // CREATE
+    // ============================================================
+    public function create($id_carrera)
+    {
+        $carrera = Carrera::findOrFail($id_carrera);
+        return view('ambientes.create', compact('carrera'));
+    }
+
+    // ============================================================
+    // STORE
+    // ============================================================
+    public function store(Request $request, $id_carrera)
+{
+    $user = Auth::user();
+    if (! $user || ! $user->esAdmin()) {
+        abort(403, 'No autorizado.');
+    }
+
+    $carrera = Carrera::findOrFail($id_carrera);
+
+    $data = $request->validate([
+        'codigo' => 'required|string|max:30|unique:ambientes,codigo',
+        'nombre' => 'required|string|max:100',
+        'bloque' => 'required|string|max:20',
+        'piso'   => 'required|integer|min:0',
+    ]);
+
+    $data['id_carrera'] = $carrera->id_carrera;
+    $data['codigo']     = strtoupper($data['codigo']);
+
+    Ambiente::create($data);
+
+    return redirect()->route('carreras.show', $carrera->id_carrera)
+        ->with('success', 'Ambiente creado correctamente.');
+}
+
+    // ============================================================
+    // SHOW: POR ID (único método)
+    // ============================================================
+public function show($id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // 1. Cargar el ambiente, si está dentro del alcance del usuario
+        $ambiente = $user->ambientesVisibles()->with(['carrera'])->findOrFail($id);
+
+    // 2. Cargar las categorías de ese ambiente con conteo de activos y no activos
+    $categorias = Categoria::where('id_ambiente', $ambiente->id_ambiente)
+        ->withCount(['activos'])
+        ->withCount(['activos as activos_fijos_count' => fn ($q) => $q->where('tipo_bien', 'ACTIVO_FIJO')])
+        ->withCount(['activos as no_activos_count' => fn ($q) => $q->where('tipo_bien', 'NO_ACTIVO')])
+        ->orderBy('nombre')
+        ->get();
+
+    // 3. Totales del ambiente separados por tipo
+    $totales = [
+        'ACTIVO_FIJO' => ActivoFijo::where('id_ambiente', $ambiente->id_ambiente)->where('tipo_bien', 'ACTIVO_FIJO')->count(),
+        'NO_ACTIVO' => ActivoFijo::where('id_ambiente', $ambiente->id_ambiente)->where('tipo_bien', 'NO_ACTIVO')->count(),
+    ];
+
+    // 4. Listado real de cada tipo, para verlos de una vez
+    $activosFijos = ActivoFijo::with(['categoria', 'custodio'])
+        ->where('id_ambiente', $ambiente->id_ambiente)
+        ->where('tipo_bien', 'ACTIVO_FIJO')
+        ->orderBy('nombre')->get();
+
+    $noActivos = ActivoFijo::with(['categoria', 'custodio'])
+        ->where('id_ambiente', $ambiente->id_ambiente)
+        ->where('tipo_bien', 'NO_ACTIVO')
+        ->orderBy('nombre')->get();
+
+    return view('ambientes.show', compact('ambiente', 'categorias', 'totales', 'activosFijos', 'noActivos'));
+}
+    // ============================================================
+    // UPDATE
+    // ============================================================
+    public function update(Request $request, $id_carrera, $id_ambiente)
+{
+    $user = Auth::user();
+    if (! $user || ! $user->esAdmin()) {
+        abort(403, 'No autorizado.');
+    }
+
+    $ambiente = Ambiente::where('id_carrera', $id_carrera)
+        ->findOrFail($id_ambiente);
+
+    $data = $request->validate([
+        'codigo' => [
+            'required', 'string', 'max:30',
+            // ⭐ CLAVE: ignorar el ambiente actual
+            Rule::unique('ambientes', 'codigo')->ignore($ambiente->id_ambiente, 'id_ambiente'),
+        ],
+        'nombre' => 'required|string|max:100',
+        'bloque' => 'nullable|string|max:20',
+        'piso'   => 'nullable|integer',
+    ], [
+        'codigo.required' => 'El código del ambiente es obligatorio.',
+        'codigo.unique'   => 'El código ingresado ya pertenece a otro ambiente.',
+        'nombre.required' => 'El nombre del ambiente es obligatorio.',
+    ]);
+
+    $data['codigo'] = strtoupper($data['codigo']);
+
+    $ambiente->update($data);
+
+    return back()->with('success', 'Ambiente actualizado correctamente.');
+}
+public function asignarCustodios(Request $request, $id)
+{
+    $ambiente = Ambiente::findOrFail($id);
+
+    // Sincroniza los usuarios seleccionados (espera un array 'usuarios' desde el formulario)
+    $ambiente->custodios()->sync($request->input('usuarios', []));
+
+    return back()->with('success', 'Docentes custodios asignados correctamente al ambiente.');
+}
+    // ============================================================
+    // DESTROY
+    // ============================================================
+    public function destroy($id_carrera, $id_ambiente)
+    {
+        $user = Auth::user();
+        if (! $user || ! method_exists($user, 'esAdmin') || ! call_user_func([$user, 'esAdmin'])) {
+            abort(403, 'No autorizado.');
+        }
+
+        $ambiente = Ambiente::where('id_carrera', $id_carrera)
+            ->findOrFail($id_ambiente);
+
+        $ambiente->delete();
+
+        return back()->with('success', 'Ambiente eliminado correctamente.');
+    }
+}

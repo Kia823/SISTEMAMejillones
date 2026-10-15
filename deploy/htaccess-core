@@ -1,0 +1,26 @@
+# Este archivo va dentro de htdocs/core/ (súbelo con el nombre .htaccess).
+#
+# En InfinityFree el núcleo tiene que vivir dentro de htdocs porque el
+# servidor solo deja leer esa carpeta (open_basedir). Estas reglas impiden que
+# se descarguen desde el navegador el .env con la contraseña de la base, el
+# código fuente y el registro de errores.
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>
+
+# Por si el servidor sirve archivos PHP como texto en lugar de ejecutarlos.
+<FilesMatch "\.(env|log|sql|md|json|lock|yml|yaml)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
