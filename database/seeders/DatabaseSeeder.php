@@ -351,7 +351,7 @@ class DatabaseSeeder extends BaseSeeder
             ['codigo' => 'GD',  'nombre' => 'Gobierno Departamental'],
             ['codigo' => 'GM',  'nombre' => 'Gobierno Municipal'],
             ['codigo' => 'GN',  'nombre' => 'Gobierno Nacional'],
-            ['codigo' => 'PSP', 'nombre' => 'Proyecto Socio Productivo'],
+            ['codigo' => 'PSP', 'nombre' => 'Proyecto Sociocomunitario Productivo'],
             ['codigo' => 'ADQ', 'nombre' => 'Adquisición'],
             ['codigo' => 'RPC', 'nombre' => 'Recursos Propios por Carrera'],
             ['codigo' => 'RPI', 'nombre' => 'Recursos Propios Institucionales'],
