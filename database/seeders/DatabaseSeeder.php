@@ -17,30 +17,14 @@ class DatabaseSeeder extends BaseSeeder
 {
     public function run(): void
     {
-        Schema::disableForeignKeyConstraints();
-
-        $tablas = [
-            'verificaciones_fisicas',
-            'actas_baja',
-            'actas_transferencia',
-            'historial_titulares',
-            'item_usuario',
-            'activos_fijos',
-            'items',
-            'ambientes',
-            'categorias',
-            'fuentes_financiamiento',
-            'usuarios',
-            'carreras',
-        ];
-
-        foreach ($tablas as $tabla) {
-            if (Schema::hasTable($tabla)) {
-                DB::table($tabla)->truncate();
-            }
-        }
-
-        Schema::enableForeignKeyConstraints();
+        // ============================================================
+        // NOTA: NO se hace truncate() para que el seeder sea seguro
+        // en producción. Todos los registros usan updateOrCreate(),
+        // por lo que ejecutarlo varias veces NO duplica datos.
+        //
+        // Para limpiar TODO en desarrollo:
+        //     php artisan migrate:fresh --seed
+        // ============================================================
 
         // ============================================================
         // 1. CARRERAS
