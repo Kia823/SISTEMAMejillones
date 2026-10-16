@@ -181,7 +181,7 @@
                         <option value="{{ $usr->id_usuario }}"
                                 data-busqueda="{{ strtolower($usr->nombre_completo . ' ' . $usr->ci . ' ' . ($itemActivo?->numero_item ?? '')) }}"
                                 {{ old('id_custodio') == $usr->id_usuario ? 'selected' : '' }}>
-                            {{ $usr->nombre_completo }} — C.I.: {{ $usr->ci }} ({{$nroItem }})
+                            {{ $nroItem }} · C.I.: {{ $usr->ci }} · {{ $usr->nombre_completo }}
                         </option>
                     @endforeach
                 </select>
