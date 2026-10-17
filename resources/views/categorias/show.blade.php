@@ -37,6 +37,11 @@
                             onmouseover="this.style.background='#059669';" onmouseout="this.style.background='#10b981';">
                             ➕ Nuevo Activo
                         </button>
+                        <a href="{{ route('activos.etiquetas', ['id_categoria' => $categoria->id_categoria ?? '']) }}" target="_blank"
+                            style="background:#7c3aed;color:white;padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;text-decoration:none;"
+                            onmouseover="this.style.background='#6b21a8';" onmouseout="this.style.background='#7c3aed';">
+                            🏷️ Imprimir Etiquetas
+                        </a>
                     @endif
                 </div>
             </div>
@@ -165,11 +170,15 @@
                                             <a href="{{ route('activos.descargar_qr', $a->id_activo) }}" title="Descargar QR"
                                                 style="width:30px;height:30px;background:#f3e8ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;">⬇️</a>
 
+                                            @if (auth()->check() && auth()->user()->esAdmin())
                                             <a href="{{ route('activos.etiqueta', $a->id_activo) }}" target="_blank" title="Etiqueta"
                                                 style="width:30px;height:30px;background:#fef3c7;color:#f59e0b;border:1px solid #fde68a;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;">🏷️</a>
+                                            @endif
 
+                                            @if (auth()->check() && auth()->user()->esAdmin())
                                             <a href="{{ route('actas.alta.pdf', $a->id_activo) }}" target="_blank" title="Acta de Alta"
                                                 style="width:30px;height:30px;background:#d1fae5;color:#059669;border:1px solid #a7f3d0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;">📋</a>
+                                            @endif
 
                                             @if (auth()->check() && auth()->user()->esAdmin())
                                                 <button type="button" onclick="confirmarEliminarActivo({{ $a->id_activo }}, '{{ addslashes($a->codigo_activo) }}', '{{ addslashes($a->nombre) }}')"
@@ -198,54 +207,108 @@
     {{-- ============================================================ --}}
     {{-- MODAL: NUEVO ACTIVO (CON 3 FOTOS) --}}
     {{-- ============================================================ --}}
-    <div id="activo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;justify-content:center;align-items:center;padding:20px;">
-        <div style="background:white;border-radius:20px;padding:30px;width:100%;max-width:800px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);">
+    <div id="activo-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(6px);z-index:9999;justify-content:center;align-items:center;padding:16px;">
 
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;">
-                <h3 style="margin:0;font-size:18px;font-weight:800;color:#0f172a;">📦 Registrar Nuevo Activo</h3>
-                <button type="button" onclick="closeActivoModal()" style="background:#f1f5f9;border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#475569;">×</button>
+        <div style="background:#ffffff; border-radius:20px; width:100%; max-width:880px; max-height:94vh; display:flex; flex-direction:column; box-shadow:0 30px 60px -12px rgba(0,0,0,0.4); border:1px solid #e2e8f0; overflow:hidden; animation:modalSlideUp 0.25s ease-out;">
+
+            <style>
+                @keyframes modalSlideUp {
+                    from { opacity:0; transform:translateY(20px) scale(0.98); }
+                    to { opacity:1; transform:translateY(0) scale(1); }
+                }
+                .af-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+                .af-grid > div { display:flex; flex-direction:column; }
+                .af-label { font-size:11px; font-weight:800; color:#475569; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+                .af-input {
+                    width:100%; padding:10px 14px; border-radius:10px; border:1.5px solid #e2e8f0; font-size:13px; font-weight:500; color:#0f172a;
+                    box-sizing:border-box; background:#f8fafc; transition:all 0.2s ease; font-family:inherit;
+                }
+                .af-input:hover { border-color:#cbd5e1; }
+                .af-input:focus { outline:none; border-color:#2563eb; background:#ffffff; box-shadow:0 0 0 4px rgba(37,99,235,0.1); }
+                .af-span-2 { grid-column:span 2; }
+                .af-box { background:#f8fafc; padding:16px; border-radius:14px; border:1.5px solid #e2e8f0; }
+                .af-error { display:none; color:#ef4444; font-size:11px; font-weight:700; margin-top:5px; }
+                .af-error.visible { display:block; }
+                .af-input-error { border-color:#ef4444 !important; background:#fef2f2 !important; }
+                .af-asterisco { color:#ef4444; margin-left:2px; display:none; font-weight:900; }
+                .af-asterisco.visible { display:inline; }
+                .af-dropzone {
+                    width:100%; height:110px; border:2px dashed #cbd5e1; border-radius:12px; display:flex; flex-direction:column;
+                    align-items:center; justify-content:center; background:#ffffff; overflow:hidden; margin-bottom:8px; transition:all 0.2s; cursor:pointer;
+                }
+                .af-dropzone:hover { border-color:#2563eb; background:#f0f6ff; }
+                .btn-secondary { background:#f1f5f9; color:#475569; border:none; padding:11px 22px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; transition:all 0.2s; }
+                .btn-secondary:hover { background:#e2e8f0; color:#1e293b; }
+                .btn-primary { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#ffffff; border:none; padding:11px 24px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 4px 12px -2px rgba(37,99,235,0.4); transition:all 0.2s; }
+                .btn-primary:hover { background:linear-gradient(135deg,#1d4ed8,#1e40af); box-shadow:0 8px 16px -4px rgba(37,99,235,0.5); transform:translateY(-1px); }
+                .btn-primary:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+                /* Custodio selector */
+                .custodio-wrapper {
+                    border:1.5px solid #e2e8f0; border-radius:12px; overflow:hidden; background:#ffffff;
+                    transition:all 0.2s;
+                }
+                .custodio-wrapper:focus-within { border-color:#2563eb; box-shadow:0 0 0 4px rgba(37,99,235,0.1); }
+                .custodio-search {
+                    width:100%; padding:12px 16px; border:none; border-bottom:1.5px solid #f1f5f9; font-size:13px; outline:none;
+                    background:#f8fafc; font-weight:500; color:#0f172a; box-sizing:border-box;
+                }
+                .custodio-search::placeholder { color:#94a3b8; font-weight:500; }
+                .custodio-search:focus { background:#ffffff; }
+                .custodio-list {
+                    width:100%; padding:6px; border:none; font-size:13px; background:white; outline:none;
+                    max-height:160px; overflow-y:auto;
+                }
+                .custodio-list option {
+                    padding:10px 14px; border-radius:8px; cursor:pointer; color:#1e293b; font-weight:600;
+                    margin-bottom:2px; transition:background 0.15s; border:1px solid transparent;
+                }
+                .custodio-list option:hover { background:#eff6ff; }
+                .custodio-list option:checked { background:#2563eb; color:white; }
+                .custodio-list option:checked::before { content:'✓ '; font-weight:900; }
+            </style>
+
+            {{-- Header --}}
+            <div style="padding:20px 26px; border-bottom:1.5px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg,#f8fafc,#ffffff);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#ffffff; width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 4px 10px -2px rgba(37,99,235,0.4);">📦</div>
+                    <div>
+                        <h3 style="margin:0; font-size:17px; font-weight:800; color:#0f172a;">Registrar Nuevo Activo</h3>
+                        <p style="margin:0; font-size:12px; color:#64748b; font-weight:500;">Complete los datos del bien para incorporarlo al inventario.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeActivoModal()" style="background:#f1f5f9; border:none; border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; color:#64748b; transition:all 0.2s; font-weight:700;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#64748b';">✕</button>
             </div>
 
-            <form id="activo-modal-form" method="POST" action="{{ route('activos.store') }}" enctype="multipart/form-data" novalidate>
+            {{-- Formulario Body --}}
+            <form id="activo-modal-form" method="POST" action="{{ route('activos.store') }}" enctype="multipart/form-data" novalidate style="overflow-y:auto; padding:24px 26px;">
                 @csrf
-                <input type="hidden" name="id_ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
+                <input type="hidden" name="id_ambiente" id="crear-id-ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
                 <input type="hidden" name="id_categoria_origen" value="{{ $categoria->id_categoria ?? '' }}">
 
-                <style>
-                    .af-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-                    .af-grid > div { display:flex; flex-direction:column; }
-                    .af-label { font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:#334155; }
-                    .af-input { width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;font-size:13px;box-sizing:border-box;background:white; }
-                    .af-span-2 { grid-column:span 2; }
-                    .af-box { background:#f8fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; }
-                    .af-error { display:none;color:#dc2626;font-size:11px;font-weight:700;margin-top:4px; }
-                    .af-error.visible { display:block; }
-                    .af-input-error { border-color:#dc2626 !important; background:#fef2f2 !important; }
-                    .af-asterisco { color:#dc2626; margin-left:2px; display:none; }
-                    .af-asterisco.visible { display:inline; }
-                </style>
-
                 <div class="af-grid">
-                    <div class="af-span-2 af-box" style="display:flex;align-items:center;justify-content:space-between;">
+
+                    {{-- Clasificación --}}
+                    <div class="af-span-2 af-box" style="display:flex; align-items:center; justify-content:space-between; border-left:4px solid #2563eb; background:linear-gradient(90deg,#eff6ff,#ffffff);">
                         <div>
-                            <strong style="font-size: 13px; color: #0f172a; display: block;">Tipo de Clasificación</strong>
-                            <span id="ayuda-tipo-bien" style="font-size: 11px; color: #64748b;">Activo Fijo: marca, modelo y serie obligatorios (3 fotos).</span>
+                            <strong style="font-size:13px; color:#0f172a; display:block; font-weight:800;">🏷️ Tipo de Clasificación</strong>
+                            <span id="ayuda-tipo-bien" style="font-size:11px; color:#64748b; font-weight:500;">Activo Fijo: marca, modelo y serie son obligatorios (3 fotos).</span>
                         </div>
-                        <select name="tipo_bien" id="select-tipo-bien" onchange="cambiarTipoBien(this.value)"
-                            style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; background: white;">
+                        <select name="tipo_bien" id="select-tipo-bien" onchange="cambiarTipoBien(this.value)" class="af-input" style="width:auto; font-weight:800; padding:9px 16px; background:white;">
                             <option value="ACTIVO_FIJO">🔹 Activo Fijo</option>
                             <option value="NO_ACTIVO">🔸 No Activo</option>
                         </select>
                     </div>
 
+                    {{-- Código & Categoría --}}
                     <div>
-                        <label class="af-label">Código *</label>
+                        <label class="af-label">Código <span class="af-asterisco visible">*</span></label>
                         <input type="text" name="codigo_activo" id="crear-codigo-activo" maxlength="50" class="af-input" value="ACT-{{ date('Y') }}-{{ rand(1000, 9999) }}">
                         <div class="af-error" data-for="crear-codigo-activo"></div>
                     </div>
 
                     <div>
-                        <label class="af-label">Categoría (Ambiente) *</label>
+                        <label class="af-label">Categoría (Ambiente) <span class="af-asterisco visible">*</span></label>
                         <select name="id_categoria" id="crear-id-categoria" class="af-input">
                             <option value="">— Seleccionar categoría —</option>
                             @foreach (\App\Models\Categoria::where('id_ambiente', $ambiente->id_ambiente ?? 0)->orderBy('nombre')->get() as $cat)
@@ -257,41 +320,48 @@
                         <div class="af-error" data-for="crear-id-categoria"></div>
                     </div>
 
+                    {{-- Cantidad & Fecha --}}
                     <div>
-                        <label class="af-label">Cantidad *</label>
+                        <label class="af-label">Cantidad <span class="af-asterisco visible">*</span></label>
                         <input type="number" name="cantidad" id="crear-cantidad" min="1" max="100" value="1" class="af-input">
                         <div class="af-error" data-for="crear-cantidad"></div>
                     </div>
+
                     <div>
-                        <label class="af-label">Fecha Adquisición *</label>
+                        <label class="af-label">Fecha Adquisición <span class="af-asterisco visible">*</span></label>
                         <input type="date" name="fecha_adquisicion" id="crear-fecha-adquisicion" value="{{ date('Y-m-d') }}" class="af-input">
                         <div class="af-error" data-for="crear-fecha-adquisicion"></div>
                     </div>
 
+                    {{-- Nombre --}}
                     <div class="af-span-2">
-                        <label class="af-label">Nombre del Activo *</label>
-                        <input type="text" name="nombre" id="crear-nombre" maxlength="150" class="af-input">
+                        <label class="af-label">Nombre del Activo <span class="af-asterisco visible">*</span></label>
+                        <input type="text" name="nombre" id="crear-nombre" maxlength="150" placeholder="Ej. Computadora portátil Dell XPS 15" class="af-input">
                         <div class="af-error" data-for="crear-nombre"></div>
                     </div>
 
+                    {{-- Marca, Modelo, Serie --}}
                     <div>
-                        <label class="af-label" id="lbl-marca">Marca <span class="af-asterisco" id="req-marca">*</span></label>
-                        <input type="text" name="marca" id="crear-input-marca" maxlength="80" class="af-input">
+                        <label class="af-label" id="lbl-marca">Marca <span class="af-asterisco" id="crear-req-marca">*</span></label>
+                        <input type="text" name="marca" id="crear-input-marca" maxlength="80" placeholder="Ej. Dell, HP, Samsung" class="af-input">
                         <div class="af-error" data-for="crear-input-marca"></div>
-                    </div>
-                    <div>
-                        <label class="af-label" id="lbl-modelo">Modelo <span class="af-asterisco" id="req-modelo">*</span></label>
-                        <input type="text" name="modelo" id="crear-input-modelo" maxlength="80" class="af-input">
-                        <div class="af-error" data-for="crear-input-modelo"></div>
-                    </div>
-                    <div>
-                        <label class="af-label" id="lbl-serie">N° Serie <span class="af-asterisco" id="req-serie">*</span></label>
-                        <input type="text" name="numero_serie" id="crear-input-serie" maxlength="80" class="af-input">
-                        <div class="af-error" data-for="crear-input-serie"></div>
                     </div>
 
                     <div>
-                        <label class="af-label">Fuente *</label>
+                        <label class="af-label" id="lbl-modelo">Modelo <span class="af-asterisco" id="crear-req-modelo">*</span></label>
+                        <input type="text" name="modelo" id="crear-input-modelo" maxlength="80" placeholder="Ej. Latitude 3420" class="af-input">
+                        <div class="af-error" data-for="crear-input-modelo"></div>
+                    </div>
+
+                    <div class="af-span-2">
+                        <label class="af-label" id="lbl-serie">N° Serie <span class="af-asterisco" id="crear-req-serie">*</span></label>
+                        <input type="text" name="numero_serie" id="crear-input-serie" maxlength="80" placeholder="Ej. SN-9876543210" class="af-input">
+                        <div class="af-error" data-for="crear-input-serie"></div>
+                    </div>
+
+                    {{-- Fuente, Estado, Valor --}}
+                    <div>
+                        <label class="af-label">Fuente Financiamiento <span class="af-asterisco visible">*</span></label>
                         <select name="id_fuente" id="crear-id-fuente" class="af-input">
                             <option value="">— Seleccionar —</option>
                             @foreach (\App\Models\FuenteFinanciamiento::orderBy('nombre')->get() as $f)
@@ -300,77 +370,114 @@
                         </select>
                         <div class="af-error" data-for="crear-id-fuente"></div>
                     </div>
+
                     <div>
-                        <label class="af-label">Estado Físico *</label>
+                        <label class="af-label">Estado Físico <span class="af-asterisco visible">*</span></label>
                         <select name="estado_fisico" id="crear-estado-fisico" class="af-input">
-                            <option value="B">Bueno</option>
-                            <option value="R">Regular</option>
-                            <option value="M">Malo</option>
-                            <option value="FF">Fuera de funcionamiento</option>
+                            <option value="B">🟢 Bueno</option>
+                            <option value="R">🟡 Regular</option>
+                            <option value="M">🔴 Malo</option>
+                            <option value="FF">⚫ Fuera de funcionamiento</option>
                         </select>
                         <div class="af-error" data-for="crear-estado-fisico"></div>
                     </div>
-                    <div>
-                        <label class="af-label">Valor (Bs.) *</label>
-                        <input type="number" name="valor_adquisicion" id="crear-valor-adquisicion" step="0.01" min="0" value="0" class="af-input">
+
+                    <div class="af-span-2">
+                        <label class="af-label">Valor Adquisición (Bs.) <span class="af-asterisco visible">*</span></label>
+                        <input type="number" name="valor_adquisicion" id="crear-valor-adquisicion" step="0.01" min="0" value="0.00" class="af-input">
                         <div class="af-error" data-for="crear-valor-adquisicion"></div>
                     </div>
 
+                    {{-- ⭐ CUSTODIO RESPONSABLE --}}
                     <div class="af-span-2">
-                        <label class="af-label">Custodio Responsable *</label>
-                        <input type="text" id="buscador-custodio-modal" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
-                            style="width:100%;padding:9px 12px;border-radius:8px 8px 0 0;border:1px solid #cbd5e1;font-size:13px;box-sizing:border-box;background:#f8fafc;"
-                            onkeyup="filtrarCustodiosModal(this.value)">
-                        <select name="id_custodio" id="crear-id-custodio" size="4"
-                            style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
-                            @foreach (\App\Models\User::where('estado', 'ACTIVO')->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])->orderBy('nombre_completo')->get() as $u)
-                                @php
-                                    $itemActivo = $u->items->first();
-                                    $nroItem = $itemActivo ? 'Ítem #' . $itemActivo->numero_item : 'Sin ítem';
-                                    $textoBusqueda = strtolower($u->nombre_completo . ' ' . $u->ci . ' ' . ($itemActivo?->numero_item ?? ''));
-                                @endphp
-                                <option value="{{ $u->id_usuario }}" data-busqueda="{{ $textoBusqueda }}" style="padding: 6px; border-bottom: 1px solid #f1f5f9;">
-                                    {{ $u->nombre_completo }} (C.I.: {{ $u->ci }} · {{ $nroItem }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <label class="af-label">👤 Custodio Responsable <span class="af-asterisco visible">*</span></label>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <div style="display:flex;gap:10px;">
+                                <div style="flex:1;">
+                                    <label style="font-size:10px;color:#64748b;font-weight:600;">Filtrar por Carrera</label>
+                                    <select id="filtro-carrera-custodio" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;font-size:12px;">
+                                        <option value="">Todas las carreras</option>
+                                        @foreach($carreras as $cr)
+                                            <option value="{{ $cr->id_carrera }}">{{ $cr->nombre }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="custodio-wrapper">
+                                <input type="text" id="buscador-custodio-modal"
+                                    class="custodio-search"
+                                    placeholder="🔍 Buscar por Ítem, C.I. o Nombre..."
+                                    onkeyup="filtrarCustodiosModal(this.value)"
+                                    autocomplete="off">
+                                <select name="id_custodio" id="crear-id-custodio" size="5" class="custodio-list">
+                                    <option value="">— Seleccione custodio del ambiente —</option>
+                                    {{-- Custodios cargados por AJAX según el ambiente (ver cargarCustodiosModal) --}}
+                                </select>
+                            </div>
+                        </div>
                         <div class="af-error" data-for="crear-id-custodio"></div>
+                        <div style="font-size:10px; color:#94a3b8; margin-top:6px; font-weight:600;">
+                            💡 Los custodios se muestran como: <strong>Ítem · C.I. · Nombre Completo</strong>
+                        </div>
                     </div>
 
+                    {{-- Descripción --}}
                     <div class="af-span-2">
-                        <label class="af-label">Descripción *</label>
-                        <textarea name="descripcion" id="crear-descripcion" rows="2" maxlength="500" class="af-input" style="resize:none;"></textarea>
+                        <label class="af-label">Descripción / Observaciones <span class="af-asterisco visible">*</span></label>
+                        <textarea name="descripcion" id="crear-descripcion" rows="3" maxlength="500" placeholder="Detalles relevantes del activo..." class="af-input" style="resize:none;"></textarea>
                         <div class="af-error" data-for="crear-descripcion"></div>
                     </div>
 
-                    {{-- ⭐ 3 ESPACIOS PARA FOTOS EN NUEVO ACTIVO --}}
+                    {{-- FOTOGRAFÍAS --}}
                     <div class="af-span-2 af-box">
-                        <div style="font-size:12px;font-weight:800;display:block;margin-bottom:8px;color:#1e293b;">
-                            📷 Fotografías del Activo <span id="lbl-fotos-info" style="font-weight:600;color:#64748b;">(3 fotos)</span>
+                        <div style="font-size:12px; font-weight:800; color:#1e293b; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:16px;">📷</span>
+                            <span>Fotografías del Activo</span>
+                            <span id="lbl-fotos-info" style="font-weight:600; color:#64748b; font-size:11px;"></span>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+                            {{-- Frontal --}}
                             <div>
-                                <label class="af-label">Foto Frontal <span class="af-asterisco" id="req-foto-frontal">*</span></label>
-                                <input type="file" name="imagen" id="crear-imagen" accept="image/*" class="af-input" style="padding:6px;font-size:11px;">
+                                <label class="af-label" style="font-size:10px;">Foto Frontal <span class="af-asterisco visible" id="crear-req-foto-frontal">*</span></label>
+                                <div class="af-dropzone" id="crear-preview-frontal">
+                                    <span style="font-size:24px; color:#94a3b8;">🖼️</span>
+                                    <span style="color:#94a3b8; font-size:11px; margin-top:4px; font-weight:600;">Vista frontal</span>
+                                </div>
+                                <input type="file" name="imagen" id="crear-imagen" accept="image/*" class="af-input" style="padding:6px; font-size:11px;" onchange="previewImage(this, 'crear-preview-frontal')">
                                 <div class="af-error" data-for="crear-imagen"></div>
                             </div>
+
+                            {{-- Lateral --}}
                             <div id="crear-bloque-lateral">
-                                <label class="af-label">Foto Lateral <span class="af-asterisco" id="req-foto-lateral">*</span></label>
-                                <input type="file" name="imagen_lateral" id="crear-imagen_lateral" accept="image/*" class="af-input" style="padding:6px;font-size:11px;">
+                                <label class="af-label" style="font-size:10px;">Foto Lateral <span class="af-asterisco visible" id="crear-req-foto-lateral">*</span></label>
+                                <div class="af-dropzone" id="crear-preview-lateral">
+                                    <span style="font-size:24px; color:#94a3b8;">🖼️</span>
+                                    <span style="color:#94a3b8; font-size:11px; margin-top:4px; font-weight:600;">Vista lateral</span>
+                                </div>
+                                <input type="file" name="imagen_lateral" id="crear-imagen_lateral" accept="image/*" class="af-input" style="padding:6px; font-size:11px;" onchange="previewImage(this, 'crear-preview-lateral')">
                                 <div class="af-error" data-for="crear-imagen_lateral"></div>
                             </div>
+
+                            {{-- Detalle --}}
                             <div id="crear-bloque-detalle">
-                                <label class="af-label">Foto Detalle <span class="af-asterisco" id="req-foto-detalle">*</span></label>
-                                <input type="file" name="imagen_detalle" id="crear-imagen_detalle" accept="image/*" class="af-input" style="padding:6px;font-size:11px;">
+                                <label class="af-label" style="font-size:10px;">Foto Detalle <span class="af-asterisco visible" id="crear-req-foto-detalle">*</span></label>
+                                <div class="af-dropzone" id="crear-preview-detalle">
+                                    <span style="font-size:24px; color:#94a3b8;">🏷️</span>
+                                    <span style="color:#94a3b8; font-size:11px; margin-top:4px; font-weight:600;">Placa / Serial</span>
+                                </div>
+                                <input type="file" name="imagen_detalle" id="crear-imagen_detalle" accept="image/*" class="af-input" style="padding:6px; font-size:11px;" onchange="previewImage(this, 'crear-preview-detalle')">
                                 <div class="af-error" data-for="crear-imagen_detalle"></div>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
-                <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #e2e8f0;padding-top:16px;margin-top:20px;">
-                    <button type="button" onclick="closeActivoModal()" style="background:#e2e8f0;color:#475569;border:none;padding:10px 18px;border-radius:8px;font-weight:700;cursor:pointer;">Cancelar</button>
-                    <button type="submit" id="btn-guardar-activo" style="background:#2563eb;color:white;border:none;padding:10px 18px;border-radius:8px;font-weight:700;cursor:pointer;">💾 Guardar Activo</button>
+                {{-- Footer Buttons --}}
+                <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1.5px solid #f1f5f9; padding-top:20px; margin-top:24px;">
+                    <button type="button" class="btn-secondary" onclick="closeActivoModal()">Cancelar</button>
+                    <button type="submit" id="btn-guardar-activo" class="btn-primary">💾 Guardar Activo</button>
                 </div>
             </form>
         </div>
@@ -391,7 +498,7 @@
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="id_activo" id="edit-id-activo">
-                <input type="hidden" name="id_ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
+                <input type="hidden" name="id_ambiente" id="edit-id-ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
                 <input type="hidden" name="id_categoria_origen" value="{{ $categoria->id_categoria ?? '' }}">
 
                 <div class="af-grid">
@@ -490,16 +597,8 @@
                             onkeyup="filtrarCustodiosEditModal(this.value)">
                         <select name="id_custodio" id="edit-id-custodio" size="4"
                             style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
-                            @foreach (\App\Models\User::where('estado', 'ACTIVO')->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])->orderBy('nombre_completo')->get() as $u)
-                                @php
-                                    $itemActivo = $u->items->first();
-                                    $nroItem = $itemActivo ? 'Ítem #' . $itemActivo->numero_item : 'Sin ítem';
-                                    $textoBusqueda = strtolower($u->nombre_completo . ' ' . $u->ci . ' ' . ($itemActivo?->numero_item ?? ''));
-                                @endphp
-                                <option value="{{ $u->id_usuario }}" data-busqueda="{{ $textoBusqueda }}" style="padding: 6px; border-bottom: 1px solid #f1f5f9;">
-                                    {{ $u->nombre_completo }} (C.I.: {{ $u->ci }} · {{ $nroItem }})
-                                </option>
-                            @endforeach
+                            <option value="">— Seleccione custodio del ambiente —</option>
+                            {{-- Custodios cargados por AJAX según el ambiente (ver cargarCustodiosEditModal) --}}
                         </select>
                         <div class="af-error" data-for="edit-id-custodio"></div>
                     </div>
@@ -566,6 +665,20 @@
             document.querySelectorAll('.af-input-error').forEach(el => el.classList.remove('af-input-error'));
         }
 
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (!preview) return;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.innerHTML = `<span style="color:#94a3b8;font-size:11px;">Sin imagen</span>`;
+            }
+        }
+
         function aplicarTipoBien(tipo, prefijo) {
             const esFijo = tipo === 'ACTIVO_FIJO';
             const reqMarca = document.getElementById(prefijo + '-req-marca');
@@ -594,11 +707,15 @@
 
         function filtrarCustodiosModal(texto) {
             const filtro = texto.toLowerCase().trim();
+            const carreraFiltro = document.getElementById('filtro-carrera-custodio')?.value || '';
             const select = document.getElementById('crear-id-custodio');
             for (let i = 0; i < select.options.length; i++) {
                 const opt = select.options[i];
                 const busqueda = opt.getAttribute('data-busqueda') || "";
-                opt.style.display = busqueda.includes(filtro) ? "" : "none";
+                const carreraOpt = opt.getAttribute('data-carrera') || "";
+                const coincideTexto = busqueda.includes(filtro);
+                const coincideCarrera = !carreraFiltro || carreraOpt === carreraFiltro;
+                opt.style.display = (coincideTexto && coincideCarrera) ? "" : "none";
             }
         }
 
@@ -650,13 +767,46 @@
             return !hayErrores;
         }
 
-        function openActivoModal() {
+        async function openActivoModal() {
             const form = document.getElementById('activo-modal-form');
             form.reset();
             limpiarTodosLosErrores();
             document.getElementById('select-tipo-bien').value = 'ACTIVO_FIJO';
             cambiarTipoBien('ACTIVO_FIJO');
+            const idAmbiente = document.getElementById('crear-id-ambiente')?.value || '';
+            cargarCustodiosModal(idAmbiente);
             document.getElementById('activo-modal').style.display = 'flex';
+        }
+
+        async function cargarCustodiosModal(idAmbiente) {
+            const select = document.getElementById('crear-id-custodio');
+            if (!select) return;
+            select.innerHTML = '<option value="">— Cargando custodios del ambiente —</option>';
+            if (!idAmbiente) {
+                select.innerHTML = '<option value="">— Seleccione ambiente primero —</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`/activos/custodios/${idAmbiente}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+                const data = await res.json();
+                select.innerHTML = '<option value="">— Seleccione custodio del ambiente —</option>';
+                (data || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.texto;
+                    opt.setAttribute('data-busqueda', c.busqueda || '');
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error(e);
+                select.innerHTML = '<option value="">— Error al cargar custodios —</option>';
+            }
         }
 
         function closeActivoModal() {
@@ -696,13 +846,15 @@
             }
         });
 
-        function openEditActivoModal(idActivo) {
-            fetch(`{{ url('/activos') }}/${idActivo}/edit`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                credentials: 'same-origin',
-            })
-            .then(res => { if (!res.ok) throw new Error('Error'); return res.json(); })
-            .then(data => {
+        async function openEditActivoModal(idActivo) {
+            try {
+                const res = await fetch(`{{ url('/activos') }}/${idActivo}/edit`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) throw new Error('Error');
+                const data = await res.json();
+
                 document.getElementById('edit-id-activo').value = data.id_activo;
                 document.getElementById('edit-codigo-activo').value = data.codigo_activo || '';
                 document.getElementById('edit-id-categoria').value = data.id_categoria || '';
@@ -716,7 +868,6 @@
                 document.getElementById('edit-estado-fisico').value = data.estado_fisico || 'B';
                 document.getElementById('edit-valor-adquisicion').value = data.valor_adquisicion || 0;
                 document.getElementById('edit-descripcion').value = data.descripcion || '';
-                document.getElementById('edit-id-custodio').value = data.id_custodio || '';
                 document.getElementById('edit-select-tipo-bien').value = data.tipo_bien || 'ACTIVO_FIJO';
 
                 // Mostrar previsualizaciones de fotos actuales
@@ -728,9 +879,48 @@
                 limpiarTodosLosErrores();
 
                 document.getElementById('edit-activo-modal-form').action = `{{ url('/activos') }}/${idActivo}`;
+
+                await cargarCustodiosEditModal(data.id_ambiente || '', data.id_custodio || '');
+
                 document.getElementById('edit-activo-modal').style.display = 'flex';
-            })
-            .catch(err => { console.error(err); mostrarToast('❌ Error al cargar el activo', 'error'); });
+            } catch (err) {
+                console.error(err);
+                mostrarToast('❌ Error al cargar el activo', 'error');
+            }
+        }
+
+        async function cargarCustodiosEditModal(idAmbiente, idCustodioSeleccionado = '') {
+            const select = document.getElementById('edit-id-custodio');
+            if (!select) return;
+            select.innerHTML = '<option value="">— Cargando custodios del ambiente —</option>';
+            if (!idAmbiente) {
+                select.innerHTML = '<option value="">— Seleccione ambiente primero —</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`/activos/custodios/${idAmbiente}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+                const data = await res.json();
+                select.innerHTML = '<option value="">— Seleccione custodio del ambiente —</option>';
+                (data || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.texto;
+                    opt.setAttribute('data-busqueda', c.busqueda || '');
+                    select.appendChild(opt);
+                });
+                if (idCustodioSeleccionado) {
+                    select.value = idCustodioSeleccionado;
+                }
+            } catch (e) {
+                console.error(e);
+                select.innerHTML = '<option value="">— Error al cargar custodios —</option>';
+            }
         }
 
         function closeEditActivoModal() {
@@ -828,6 +1018,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             cambiarTipoBien('ACTIVO_FIJO');
             cambiarTipoBienEdit('ACTIVO_FIJO');
+            document.getElementById('filtro-carrera-custodio')?.addEventListener('change', function() {
+                filtrarCustodiosModal(document.getElementById('buscador-custodio-modal')?.value || '');
+            });
         });
     </script>
 @endsection

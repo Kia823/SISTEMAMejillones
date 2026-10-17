@@ -80,6 +80,9 @@
                 <div style="display: flex; gap: 8px; margin-top: 16px; padding-top: 10px; border-top: 1px solid #f1f5f9;" onclick="event.stopPropagation();">
                     <a class="btn" href="{{ route('carreras.show', $c->id_carrera) }}" style="flex:1; text-align:center; font-size:12px; padding:6px; text-decoration:none;">Abrir</a>
                     <a class="btn light" href="{{ route('carreras.show', $c->id_carrera) }}?nuevo_ambiente=1" style="flex:1; text-align:center; font-size:12px; padding:6px; text-decoration:none;">+ Ambiente</a>
+                    @if(auth()->check() && auth()->user()->esAdmin())
+                        <a class="btn" href="{{ route('carreras.edit', $c->id_carrera) }}" style="flex:1; text-align:center; font-size:12px; padding:6px; text-decoration:none; background:#f59e0b; color:#fff; border-color:#d97706;">✏️ Editar</a>
+                    @endif
                 </div>
             </div>
         @endforeach

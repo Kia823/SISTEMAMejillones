@@ -216,7 +216,20 @@
                     </div>
                     <div>
                         <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px; color: #334155;">Piso *</label>
-                        <input id="amb-piso" name="piso" type="number" value="{{ old('piso') }}" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid {{ $errors->has('piso') ? '#dc2626' : '#cbd5e1' }};">
+                        <select id="amb-piso" name="piso" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid {{ $errors->has('piso') ? '#dc2626' : '#cbd5e1' }};">
+                            <option value="">— Seleccionar piso —</option>
+                            <option value="PB" {{ old('piso') == 'PB' ? 'selected' : '' }}>PB</option>
+                            <option value="1" {{ old('piso') == '1' ? 'selected' : '' }}>PISO 1</option>
+                            <option value="2" {{ old('piso') == '2' ? 'selected' : '' }}>PISO 2</option>
+                            <option value="3" {{ old('piso') == '3' ? 'selected' : '' }}>PISO 3</option>
+                            <option value="4" {{ old('piso') == '4' ? 'selected' : '' }}>PISO 4</option>
+                            <option value="5" {{ old('piso') == '5' ? 'selected' : '' }}>PISO 5</option>
+                            <option value="6" {{ old('piso') == '6' ? 'selected' : '' }}>PISO 6</option>
+                            <option value="7" {{ old('piso') == '7' ? 'selected' : '' }}>PISO 7</option>
+                            <option value="8" {{ old('piso') == '8' ? 'selected' : '' }}>PISO 8</option>
+                            <option value="9" {{ old('piso') == '9' ? 'selected' : '' }}>PISO 9</option>
+                            <option value="10" {{ old('piso') == '10' ? 'selected' : '' }}>PISO 10</option>
+                        </select>
                         @error('piso')
                             <span style="color: #dc2626; font-size: 11px; font-weight: 600; display: block; margin-top: 3px;">{{ $message }}</span>
                         @enderror

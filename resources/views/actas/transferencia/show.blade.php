@@ -36,10 +36,34 @@
 
             {{-- DATOS DEL ACTIVO --}}
             <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Activo Transferido</h3>
-                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <div style="font-weight: 800; color: #1e293b; font-size: 15px;">{{ $acta->activo->nombre ?? '—' }}</div>
-                    <div style="font-size: 12px; color: #64748b; font-family: monospace; margin-top: 2px;">Código: {{ $acta->activo->codigo_activo ?? '—' }}</div>
+                <h3 style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Activo(s) Transferido(s)</h3>
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 300px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #e2e8f0; color: #475569; text-transform: uppercase; font-size: 10px;">
+                                <th style="padding: 8px; text-align: left; border: 1px solid #cbd5e1;">#</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #cbd5e1;">CÓDIGO</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #cbd5e1;">NOMBRE</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #cbd5e1;">MARCA / MODELO</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #cbd5e1;">ESTADO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $i = 1; @endphp
+                            @foreach($acta->activos as $activo)
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: 800;">{{ $i++ }}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; font-family: monospace;">{{ $activo->codigo_activo ?? '—' }}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: 700;">{{ $activo->nombre ?? '—' }}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; color: #64748b; font-size: 12px;">{{ $activo->marca ?? 'S/M' }} / {{ $activo->modelo ?? 'S/Mod' }}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; color: #64748b;">{{ $activo->estado_fisico_texto ?? $activo->estado_fisico ?? '—' }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 8px; font-size: 11px; font-weight: 800; color: #ea580c; text-align: right;">
+                        Total: {{ $acta->activos->count() }} bien(es)
+                    </div>
                 </div>
             </div>
 

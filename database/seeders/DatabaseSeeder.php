@@ -359,7 +359,7 @@ class DatabaseSeeder extends BaseSeeder
         ];
 
         foreach ($fuentes as $fuente) {
-            FuenteFinanciamiento::updateOrCreate(['nombre' => $fuente['nombre']], $fuente);
+            FuenteFinanciamiento::updateOrCreate(['codigo' => $fuente['codigo']], $fuente);
         }
 
         // ============================================================

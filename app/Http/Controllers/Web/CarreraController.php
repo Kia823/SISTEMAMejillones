@@ -66,6 +66,26 @@ class CarreraController extends Controller
     }
 
     // ============================================================
+    // CREATE: Formulario para crear carrera
+    // ============================================================
+    public function create()
+    {
+        $carreras = Carrera::orderBy('nombre')->get();
+
+        return view('carreras.create', compact('carreras'));
+    }
+
+    // ============================================================
+    // EDIT: Formulario para editar carrera
+    // ============================================================
+    public function edit($id_carrera)
+    {
+        $carrera = Carrera::findOrFail($id_carrera);
+
+        return view('carreras.edit', compact('carrera'));
+    }
+
+    // ============================================================
     // STORE: Crear carrera
     // ============================================================
     public function store(Request $request)

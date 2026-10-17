@@ -47,6 +47,16 @@ class ActaTransferencia extends Model
         return $this->belongsTo(ActivoFijo::class, 'id_activo', 'id_activo');
     }
 
+    /**
+     * Activos asociados a esta acta de transferencia (múltiples).
+     */
+    public function activos()
+    {
+        return $this->belongsToMany(ActivoFijo::class, 'acta_transferencia_activo', 'id_acta_transferencia', 'id_activo')
+            ->withPivot('cantidad')
+            ->withTimestamps();
+    }
+
     public function origenAmbiente()
     {
         return $this->belongsTo(Ambiente::class, 'id_origen_ambiente', 'id_ambiente');

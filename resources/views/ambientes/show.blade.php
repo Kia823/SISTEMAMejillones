@@ -19,6 +19,23 @@
             <h1 style="margin:10px 0 8px;font-size:28px;">{{ $ambiente->nombre }} <span style="font-size: 18px; opacity: 0.85;">({{ $ambiente->codigo ?? 'S/C' }})</span></h1>
             <p>Administra las categorías y activos de este espacio.</p>
         </div>
+        @php $custodiosAmbiente = $ambiente->custodios->where('estado', 'ACTIVO')->sortBy('nombre_completo'); @endphp
+        @if ($custodiosAmbiente->count())
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;">👥 Docentes Custodios</div>
+                <ul style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px;">
+                    @foreach ($custodiosAmbiente as $c)
+                        <li style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:6px 12px;border-radius:20px;font-size:12px;color:white;font-weight:600;">
+                            • {{ $c->nombre_completo }}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @else
+            <div style="margin-top:8px;">
+                <span style="font-size:12px;color:rgba(255,255,255,0.7);">👥 Sin docentes custodios asignados</span>
+            </div>
+        @endif
         <div class="stat-grid" style="display: flex; gap: 10px; flex-wrap: wrap;">
             <div style="background: rgba(15, 23, 42, 0.35); border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 16px; border-radius: 12px; text-align: center; min-width: 80px;">
                 <div style="font-size: 18px; font-weight: 800; color: white;">{{ $categorias->count() }}</div>

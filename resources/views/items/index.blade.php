@@ -1,23 +1,25 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<section class="panel" style="padding: 24px;">
 
-    {{-- ENCABEZADO --}}
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-        <div>
-            <h2 style="font-size:24px;font-weight:800;color:#0f172a;margin:0;">Ítems</h2>
-            <p style="color:#64748b;font-size:14px;margin:4px 0 0 0;">
-                El ítem pertenece a la institución, no a la persona. Un ítem admite 2, 3 o más custodios
-                y sobrevive a los cambios de titular.
-            </p>
+    {{-- ============ ENCABEZADO ============ --}}
+    <div style="background:linear-gradient(135deg,#0f766e 0%,#0d9488 100%);padding:28px;border-radius:16px;color:white;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;margin-bottom:24px;box-shadow:0 10px 15px -3px rgba(15,118,110,.2);">
+        <div style="flex:1;min-width:280px;">
+            <span style="background:rgba(255,255,255,.2);padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;">Ítems</span>
+            <h2 style="font-size:26px;font-weight:800;margin:8px 0 4px 0;">Gestión de Ítems</h2>
+            <p style="opacity:.9;font-size:14px;margin:0;">El ítem pertenece a la institución, no a la persona. Un ítem admite 2, 3 o más custodios y sobrevive a los cambios de titular.</p>
         </div>
-        @if(auth()->user()->esAdmin())
-            <a href="{{ route('items.create') }}"
-               style="background:#2563eb;color:white;padding:10px 18px;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">
-                + Nuevo Ítem
-            </a>
-        @endif
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            @if(auth()->user()->esAdmin())
+                <a href="{{ route('items.create') }}"
+                   style="background:#10b981;color:white;padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;"
+                   onmouseover="this.style.background='#059669';" onmouseout="this.style.background='#10b981';">
+                    + Nuevo Ítem
+                </a>
+            @endif
+        </div>
     </div>
 
     {{-- FILTROS --}}
@@ -129,5 +131,5 @@
             {{ $items->count() }} ítem(s) registrado(s)
         </div>
     </div>
-</div>
+</section>
 @endsection

@@ -49,7 +49,7 @@
                 <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:#334155;">Filtrar por Ambiente</label>
                 <select name="id_ambiente" onchange="this.form.submit()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;">
                     <option value="">Todos los ambientes</option>
-                    @foreach(\App\Models\Ambiente::with('carrera')->orderBy('nombre')->get() as $amb)
+                    @foreach($ambientesFiltro as $amb)
                         <option value="{{ $amb->id_ambiente }}" {{ request('id_ambiente') == $amb->id_ambiente ? 'selected' : '' }}>
                             {{ $amb->nombre }} ({{ $amb->carrera->nombre ?? 'Sin carrera' }})
                         </option>

@@ -12,96 +12,241 @@
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+
         body {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            background:
+                radial-gradient(900px 520px at 12% 6%, rgba(37, 99, 235, .38), transparent 60%),
+                radial-gradient(820px 520px at 88% 94%, rgba(220, 38, 38, .30), transparent 60%),
+                linear-gradient(135deg, #0b1120 0%, #0f172a 45%, #111c33 100%);
             padding: 20px;
         }
+
         .card {
-            background: white;
+            position: relative;
+            background: #ffffff;
             border-radius: 24px;
-            padding: 40px;
+            padding: 44px 40px 36px;
             width: 100%;
             max-width: 480px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow:
+                0 30px 60px -12px rgba(2, 6, 23, .55),
+                0 0 0 1px rgba(255, 255, 255, .06);
+            overflow: hidden;
+            animation: rise .5s cubic-bezier(.2, .7, .3, 1) both;
         }
+
+        /* Línea superior degradada azul → rojo */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb, #7c3aed 55%, #dc2626);
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Logo con anillo degradado */
         .logo {
-            width: 64px;
-            height: 64px;
-            background: #2563eb;
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 20px;
+            padding: 3px;
+            border-radius: 26px;
+            background: linear-gradient(135deg, #2563eb, #dc2626);
+            box-shadow: 0 14px 28px -10px rgba(37, 99, 235, .55);
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 23px;
+            padding: 10px;
+            display: block;
+        }
+
+        .brand {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: #2563eb;
+            margin-bottom: 6px;
+        }
+
+        h1 {
+            font-size: 25px;
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+            margin-bottom: 6px;
+            letter-spacing: -.01em;
+        }
+
+        .subtitle {
+            color: #64748b;
+            text-align: center;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        /* Visor QR con marco degradado */
+        .qr-frame {
+            position: relative;
+            padding: 3px;
             border-radius: 16px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed 55%, #dc2626);
+            margin-bottom: 14px;
+            box-shadow: 0 12px 26px -12px rgba(37, 99, 235, .55);
+        }
+
+        #qr-reader {
+            width: 100%;
+            border-radius: 13px;
+            overflow: hidden;
+            background: #0f172a;
+            min-height: 280px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            margin: 0 auto 20px;
         }
-        h1 { font-size: 24px; font-weight: 800; color: #0f172a; text-align: center; margin-bottom: 8px; }
-        p { color: #64748b; text-align: center; font-size: 14px; margin-bottom: 24px; }
-        #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 14px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            text-decoration: none;
-        }
-        .btn:hover { background: #1d4ed8; }
-        .btn-secondary {
-            background: #f1f5f9;
-            color: #475569;
-            margin-top: 10px;
-        }
-        .btn-secondary:hover { background: #e2e8f0; }
+
+        /* Quitar bordes por defecto de html5-qrcode */
+        #qr-reader video,
+        #qr-reader canvas { border-radius: 13px; }
+        #qr-reader img[alt="Info icon"] { display: none !important; }
+
         .status {
             text-align: center;
             color: #64748b;
-            font-size: 13px;
-            margin-top: 12px;
-        }
-        .error-msg {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-            padding: 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
-            font-size: 13px;
-            margin-bottom: 20px;
+            transition: all .2s ease;
+        }
+
+        .status.is-scanning { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+        .status.is-success  { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+        .status.is-error    { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 22px 0 16px 0;
+        }
+        .divider-line { flex: 1; height: 1px; background: #e2e8f0; }
+        .divider-text {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            width: 100%;
+            padding: 12px 14px;
+            background: #f8fafc;
+            color: #1e3a8a;
+            border: 1.5px solid #dbe3f0;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all .2s ease;
+        }
+
+        .btn:hover {
+            background: #eef4ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 18px -12px rgba(37, 99, 235, .6);
+        }
+
+        .error-msg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-bottom: 18px;
             text-align: center;
+        }
+
+        .hint {
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 440px) {
+            .card { padding: 34px 24px 28px; border-radius: 20px; }
+            #qr-reader { min-height: 220px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card { animation: none; }
+            * { transition: none !important; }
         }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <div class="logo">📱</div>
+        <div class="logo">
+            <img src="{{ asset('images/Emblema.png') }}"
+                 alt="Emblema Tecnológico Puerto de Mejillones">
+        </div>
+
+        <p class="brand">SISActivos</p>
         <h1>Acceso por QR</h1>
-        <p>Apunta la cámara a tu credencial institucional</p>
+        <p class="subtitle">Apunta la cámara a tu credencial institucional</p>
 
         @if($errors->any())
             <div class="error-msg">
-                @foreach($errors->all() as $error)
-                    {{ $error }}
-                @endforeach
+                ⚠️ {{ $errors->first() }}
             </div>
         @endif
 
-        <div id="qr-reader"></div>
+        <div class="qr-frame">
+            <div id="qr-reader"></div>
+        </div>
+
         <p class="status" id="scanner-status">Iniciando cámara...</p>
 
-        <div style="margin-top: 20px;">
-            <a href="{{ route('login') }}" class="btn btn-secondary">← Volver al login tradicional</a>
+        <div class="divider">
+            <div class="divider-line"></div>
+            <span class="divider-text">O</span>
+            <div class="divider-line"></div>
+        </div>
+
+        <a href="{{ route('login') }}" class="btn">← Volver al login tradicional</a>
+
+        <div class="hint">
+            Usa tu credencial impresa para ingresar rápidamente
         </div>
     </div>
 
@@ -120,6 +265,14 @@
         let isProcessing = false;
 
         document.addEventListener('DOMContentLoaded', function () {
+            const statusEl = document.getElementById('scanner-status');
+
+            const setStatus = (text, state = '') => {
+                statusEl.textContent = text;
+                statusEl.classList.remove('is-scanning', 'is-success', 'is-error');
+                if (state) statusEl.classList.add('is-' + state);
+            };
+
             // Precargar audios
             ['audio-bienvenido', 'audio-acceso-denegado'].forEach(id => {
                 const audio = document.getElementById(id);
@@ -149,13 +302,10 @@
                     if (isProcessing) return;
                     isProcessing = true;
 
-                    // Mostrar feedback
-                    document.getElementById('scanner-status').textContent = '✓ Código detectado. Verificando...';
-                    document.getElementById('scanner-status').style.color = '#10b981';
+                    setStatus('✓ Código detectado. Verificando...', 'success');
 
                     // Detener cámara
                     html5QrCode.stop().then(() => {
-                        // Enviar el formulario
                         document.getElementById('qr-data-input').value = decodedText;
                         document.getElementById('qr-login-form').submit();
                     }).catch(err => {
@@ -166,11 +316,10 @@
                 },
                 (errorMessage) => { /* ignorar errores de frames */ }
             ).then(() => {
-                document.getElementById('scanner-status').textContent = 'Apunta la cámara al código QR';
+                setStatus('Apunta la cámara al código QR', 'scanning');
             }).catch(err => {
                 console.error('Error cámara:', err);
-                document.getElementById('scanner-status').textContent = '⚠️ No se pudo acceder a la cámara';
-                document.getElementById('scanner-status').style.color = '#dc2626';
+                setStatus('⚠️ No se pudo acceder a la cámara', 'error');
             });
         });
     </script>

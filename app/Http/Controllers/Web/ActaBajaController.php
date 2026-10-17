@@ -10,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ActaBajaController extends Controller
 {
@@ -83,6 +84,9 @@ class ActaBajaController extends Controller
             ?? ($request->input('activo_ids')[0] ?? null);
 
         $textoMotivo = $request->input('motivo') ?? $request->input('motivo_baja');
+        $causalBaja = $request->input('causal_baja');
+        $responsableNombre = $request->input('responsable_nombre');
+        $responsableCi = $request->input('responsable_ci');
 
         if (! $textoMotivo) {
             return back()->withInput()->withErrors(['motivo' => 'El motivo de la baja es obligatorio.']);
@@ -94,6 +98,15 @@ class ActaBajaController extends Controller
 
         $activo = ActivoFijo::findOrFail($idActivoSeleccionado);
 
+        // Manejar subida de hasta 3 fotos de evidencia
+        $fotos = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $campo = "foto_evidencia_{$i}";
+            if ($request->hasFile($campo)) {
+                $fotos[$i] = $request->file($campo)->store('actas_baja/evidencias', 'public');
+            }
+        }
+
         $numero = 'BAJA-' . now()->format('Y') . '-' . str_pad(
             (string) ((ActaBaja::max('id_acta_baja') ?? 0) + 1),
             4, '0', STR_PAD_LEFT
@@ -101,12 +114,18 @@ class ActaBajaController extends Controller
 
         $esAdmin = $user->esAdmin();
 
-        $acta = DB::transaction(function () use ($request, $activo, $user, $numero, $esAdmin, $idActivoSeleccionado, $textoMotivo) {
+        $acta = DB::transaction(function () use ($request, $activo, $user, $numero, $esAdmin, $idActivoSeleccionado, $textoMotivo, $causalBaja, $responsableNombre, $responsableCi, $fotos) {
             $acta = ActaBaja::create([
                 'numero_acta'      => $numero,
                 'id_activo'        => $idActivoSeleccionado,
                 'id_usuario'       => $user->id_usuario,
                 'motivo'           => $textoMotivo,
+                'causal_baja'      => $causalBaja,
+                'foto_evidencia_1' => $fotos[1] ?? null,
+                'foto_evidencia_2' => $fotos[2] ?? null,
+                'foto_evidencia_3' => $fotos[3] ?? null,
+                'responsable_nombre' => $responsableNombre,
+                'responsable_ci'   => $responsableCi,
                 'fecha_baja'       => now(),
                 'observaciones'    => $request->input('observaciones') ?? null,
                 'estado'           => $esAdmin ? ActaBaja::ESTADO_APROBADA : ActaBaja::ESTADO_PENDIENTE,
@@ -202,8 +221,29 @@ class ActaBajaController extends Controller
     {
         $acta->load(['activo.categoria', 'activo.ambiente.carrera', 'usuario', 'aprobador']);
 
-        $pdf = Pdf::loadView('actas.baja.pdf', compact('acta'))
-            ->setPaper('letter', 'landscape')
+        // Preparar logo como data URI para que se vea en el PDF
+        $logoDataUri = '';
+        $logoPath = public_path('images/logo.png');
+        if (file_exists($logoPath)) {
+            $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
+        // Preparar las 3 fotos de evidencia como data URIs para que se vean en el PDF
+        $fotosEvidenciaDataUri = [];
+        foreach ([1, 2, 3] as $i) {
+            $campo = 'foto_evidencia_' . $i;
+            $ruta = $acta->{$campo} ?? null;
+            if ($ruta && Storage::disk('public')->exists($ruta)) {
+                $contenido = Storage::disk('public')->get($ruta);
+                $mime = Storage::disk('public')->mimeType($ruta);
+                $fotosEvidenciaDataUri[$i] = 'data:' . $mime . ';base64,' . base64_encode($contenido);
+            } else {
+                $fotosEvidenciaDataUri[$i] = null;
+            }
+        }
+
+        $pdf = Pdf::loadView('actas.baja.pdf', compact('acta', 'logoDataUri', 'fotosEvidenciaDataUri'))
+            ->setPaper('legal', 'landscape')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => true,

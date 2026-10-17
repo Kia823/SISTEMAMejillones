@@ -5,7 +5,6 @@
     <title>Inventario General Agrupado</title>
     @include('reportes.pdf._styles')
     <style>
-        /* Forzar formato Oficio Horizontal (Landscape) en PDF */
         @page {
             size: 330mm 215mm;
             margin: 8mm;
@@ -39,8 +38,6 @@
             font-size: 8.5px;
             padding: 2px 4px;
         }
-        
-        /* ESTILOS DE TEXTO PURO (SIN NINGUNA TABLA) */
         .leyendas-texto-libre {
             margin-top: 12px;
             font-size: 6.5px;
@@ -51,6 +48,7 @@
 </head>
 <body>
 
+    {{-- ENCABEZADO --}}
     <div class="header">
         <table style="width:100%;">
             <tr>
@@ -72,6 +70,12 @@
         </div>
     </div>
 
+    {{-- DATOS INSTITUCIONALES --}}
+    @php
+        $rector = \App\Models\User::where('rol', 'RECTOR')->where('estado', 'ACTIVO')->first()
+               ?? \App\Models\User::where('rol', 'DIRECTOR')->where('estado', 'ACTIVO')->first();
+        $admin = \App\Models\User::where('rol', 'ADMINISTRADOR')->where('estado', 'ACTIVO')->first();
+    @endphp
     <table class="datos" style="width:100%; margin-bottom: 6px;">
         <tr>
             <td class="label" style="font-weight:bold; width:15%;">INSTITUTO:</td>
@@ -81,24 +85,33 @@
         </tr>
         <tr>
             <td class="label" style="font-weight:bold;">DIRECTOR/RECTOR:</td>
-            <td colspan="3">LIC. JIMMY OVIDIO SIRPA CHOQUE</td>
+            <td colspan="3">{{ $rector ? $rector->nombre_completo : 'LIC. JIMMY OVIDIO SIRPA CHOQUE' }}</td>
             <td class="label" style="font-weight:bold;">PROVINCIA:</td>
             <td>MURILLO</td>
         </tr>
         <tr>
             <td class="label" style="font-weight:bold;">DIR. ADMINISTRATIVA:</td>
-            <td colspan="3">LIC. ANA LÍA ZAPANA CORTEZ</td>
+            <td colspan="3">{{ $admin ? $admin->nombre_completo : 'LIC. ANA LÍA ZAPANA CORTEZ' }}</td>
             <td class="label" style="font-weight:bold;">MUNICIPIO:</td>
             <td>LA PAZ</td>
         </tr>
         <tr>
             <td class="label" style="font-weight:bold;">UBICACIÓN:</td>
-            <td colspan="3">LABORATORIO 3 — INFORMÁTICA</td>
+            <td colspan="3">
+                @if($ambiente)
+                    {{ $ambiente->nombre }} — {{ $ambiente->carrera->nombre ?? '—' }}
+                @elseif($carrera)
+                    {{ $carrera->nombre }}
+                @else
+                    TODOS LOS AMBIENTES
+                @endif
+            </td>
             <td class="label" style="font-weight:bold;">CIUDAD:</td>
             <td>EL ALTO</td>
         </tr>
     </table>
 
+    {{-- TABLA PRINCIPAL --}}
     <table class="inventario" style="width:100%; border-collapse: collapse;">
         <thead>
             <tr>
@@ -134,12 +147,10 @@
                     <td>{{ $r->caracteristicas }}</td>
                     <td style="text-align:center;">{{ $r->cantidad }}</td>
                     <td style="text-align:right;">{{ number_format($r->costo_total, 2) }}</td>
-                    
                     <td style="text-align:center; font-weight:bold;">{{ $r->estado_fisico == 'B' ? 'X' : '' }}</td>
                     <td style="text-align:center; font-weight:bold;">{{ $r->estado_fisico == 'R' ? 'X' : '' }}</td>
                     <td style="text-align:center; font-weight:bold;">{{ $r->estado_fisico == 'M' ? 'X' : '' }}</td>
                     <td style="text-align:center; font-weight:bold;">{{ $r->estado_fisico == 'FF' ? 'X' : '' }}</td>
-
                     <td style="text-align:center;">{{ $r->fuente_codigo ?? $r->fuente ?? '—' }}</td>
                     <td style="text-align:center;">{{ $r->dia }}</td>
                     <td style="text-align:center;">{{ $r->mes }}</td>
@@ -168,129 +179,148 @@
         </tfoot>
     </table>
 
+    {{-- ========================================================= --}}
     {{-- FIRMAS DINÁMICAS --}}
-    <table class="firmas" style="margin-top: 15px; width: 100%; border-collapse: collapse;">
-        @php
-            $todosIds = $reportes->pluck('ids_array')->collapse()->unique()->values()->toArray();
-            $firmantes = [];
-            $idsAgregados = [];
-            $ambientePrincipal = null;
-            if (isset($ambiente) && $ambiente) {
-                $ambientePrincipal = $ambiente;
-            }
-            
-            if (!empty($todosIds)) {
-                $ambientePrincipal = $ambientePrincipal ?? \App\Models\Ambiente::whereHas('activos', function($q) use ($todosIds) {
-                    $q->whereIn('activos_fijos.id_activo', $todosIds);
-                })->with('carrera', 'custodios')->first();
-            }
+    {{-- ========================================================= --}}
+    @php
+        $todosIds = $reportes->pluck('ids_array')->collapse()->unique()->values()->toArray();
+        $firmantes = [];
+        $idsAgregados = [];
+        $ambientePrincipal = null;
+        if (isset($ambiente) && $ambiente) {
+            $ambientePrincipal = $ambiente;
+        }
 
-            // 1. CUSTODIOS asignados al ambiente (pivote ambiente_user)
-            if ($ambientePrincipal) {
-                foreach ($ambientePrincipal->custodios as $c) {
-                    if (!in_array($c->id_usuario, $idsAgregados)) {
-                        $firmantes[] = ['nombre' => $c->nombre_completo, 'ci' => $c->ci, 'rol' => 'CUSTODIO'];
-                        $idsAgregados[] = $c->id_usuario;
-                    }
-                }
-            }
+        if (!empty($todosIds)) {
+            $ambientePrincipal = $ambientePrincipal ?? \App\Models\Ambiente::whereHas('activos', function($q) use ($todosIds) {
+                $q->whereIn('activos_fijos.id_activo', $todosIds);
+            })->with('carrera', 'custodios')->first();
+        }
 
-            if (!empty($todosIds)) {
-                // 2. Custodios por activos (fallback / adicionales)
-                $custodiosPorActivo = \App\Models\User::whereHas('activosCustodiados', function($q) use ($todosIds) {
-                    $q->whereIn('activos_fijos.id_activo', $todosIds);
-                })->where('estado', 'ACTIVO')->distinct()->get(['id_usuario', 'nombre_completo', 'ci']);
-                foreach ($custodiosPorActivo as $c) {
-                    if (!in_array($c->id_usuario, $idsAgregados)) {
-                        $firmantes[] = ['nombre' => $c->nombre_completo, 'ci' => $c->ci, 'rol' => 'CUSTODIO'];
-                        $idsAgregados[] = $c->id_usuario;
-                    }
+        if ($ambientePrincipal) {
+            foreach ($ambientePrincipal->custodios as $c) {
+                if (!in_array($c->id_usuario, $idsAgregados)) {
+                    $firmantes[] = ['nombre' => $c->nombre_completo, 'ci' => $c->ci, 'rol' => 'CUSTODIO'];
+                    $idsAgregados[] = $c->id_usuario;
                 }
             }
-            
-            // 3. JEFE DE CARRERA del ambiente
-            if ($ambientePrincipal && $ambientePrincipal->carrera) {
-                $jefeCarrera = $ambientePrincipal->carrera->jefeCarrera()->first();
-                if (!$jefeCarrera) {
-                    $jefeCarrera = \App\Models\User::where('id_carrera', $ambientePrincipal->carrera->id_carrera)
-                        ->where('rol', 'JEFE_CARRERA')->where('estado', 'ACTIVO')->first();
+        }
+
+        if (!empty($todosIds)) {
+            $custodiosPorActivo = \App\Models\User::whereHas('activosCustodiados', function($q) use ($todosIds) {
+                $q->whereIn('activos_fijos.id_activo', $todosIds);
+            })->where('estado', 'ACTIVO')->distinct()->get(['id_usuario', 'nombre_completo', 'ci']);
+            foreach ($custodiosPorActivo as $c) {
+                if (!in_array($c->id_usuario, $idsAgregados)) {
+                    $firmantes[] = ['nombre' => $c->nombre_completo, 'ci' => $c->ci, 'rol' => 'CUSTODIO'];
+                    $idsAgregados[] = $c->id_usuario;
                 }
-                if ($jefeCarrera && !in_array($jefeCarrera->id_usuario, $idsAgregados)) {
-                    $firmantes[] = ['nombre' => $jefeCarrera->nombre_completo, 'ci' => $jefeCarrera->ci, 'rol' => 'JEFE DE CARRERA'];
-                    $idsAgregados[] = $jefeCarrera->id_usuario;
-                }
             }
-            
-            // 4. AUTORIDADES
-            $admin = \App\Models\User::where('rol', 'ADMINISTRADOR')->where('estado', 'ACTIVO')->first();
-            if ($admin && !in_array($admin->id_usuario, $idsAgregados)) {
-                $firmantes[] = ['nombre' => $admin->nombre_completo, 'ci' => $admin->ci, 'rol' => 'ADMINISTRADORA'];
-                $idsAgregados[] = $admin->id_usuario;
+        }
+
+        if ($ambientePrincipal && $ambientePrincipal->carrera) {
+            $jefeCarrera = $ambientePrincipal->carrera->jefeCarrera()->first();
+            if (!$jefeCarrera) {
+                $jefeCarrera = \App\Models\User::where('id_carrera', $ambientePrincipal->carrera->id_carrera)
+                    ->where('rol', 'JEFE_CARRERA')->where('estado', 'ACTIVO')->first();
             }
-            
-            $inventariador = \App\Models\User::where('rol', 'INVENTARIADOR')->where('estado', 'ACTIVO')->first();
-            if ($inventariador && !in_array($inventariador->id_usuario, $idsAgregados)) {
-                $firmantes[] = ['nombre' => $inventariador->nombre_completo, 'ci' => $inventariador->ci, 'rol' => 'INVENTARIADOR'];
-                $idsAgregados[] = $inventariador->id_usuario;
+            if ($jefeCarrera && !in_array($jefeCarrera->id_usuario, $idsAgregados)) {
+                $firmantes[] = ['nombre' => $jefeCarrera->nombre_completo, 'ci' => $jefeCarrera->ci, 'rol' => 'JEFE DE CARRERA'];
+                $idsAgregados[] = $jefeCarrera->id_usuario;
             }
-            
-            $rector = \App\Models\User::where('rol', 'RECTOR')->where('estado', 'ACTIVO')->first() 
-                   ?? \App\Models\User::where('rol', 'DIRECTOR')->where('estado', 'ACTIVO')->first();
-            if ($rector && !in_array($rector->id_usuario, $idsAgregados)) {
-                $firmantes[] = ['nombre' => $rector->nombre_completo, 'ci' => $rector->ci, 'rol' => 'RECTOR'];
-                $idsAgregados[] = $rector->id_usuario;
-            }
-            
-            if (empty($firmantes)) {
-                $firmantes = [
-                    ['nombre' => 'Lic. Patricia Regina Flores Chuquimia', 'ci' => '3451328', 'rol' => 'CUSTODIO'],
-                    ['nombre' => 'Lic. Johnny Chavez Quispe', 'ci' => '6032467', 'rol' => 'CUSTODIO'],
-                    ['nombre' => 'Lic. Eliza Nina Coronel', 'ci' => '4286280', 'rol' => 'CUSTODIO'],
-                    ['nombre' => 'Lic. Ana Lía Zapana Cortez', 'ci' => '4756925', 'rol' => 'ADMINISTRADORA'],
-                    ['nombre' => 'Lic. Juan Carlos Osco', 'ci' => '4243543', 'rol' => 'INVENTARIADOR'],
-                    ['nombre' => 'Lic. Jhimmy Ovidio Sirpa', 'ci' => '4960313', 'rol' => 'RECTOR'],
-                ];
-            }
-            
-            $chunks = array_chunk($firmantes, 3);
-        @endphp
-        
-        @foreach ($chunks as $rowIndex => $fila)
+        }
+
+        $admin = \App\Models\User::where('rol', 'ADMINISTRADOR')->where('estado', 'ACTIVO')->first();
+        if ($admin && !in_array($admin->id_usuario, $idsAgregados)) {
+            $firmantes[] = ['nombre' => $admin->nombre_completo, 'ci' => $admin->ci, 'rol' => 'ADMINISTRADORA'];
+            $idsAgregados[] = $admin->id_usuario;
+        }
+
+        $inventariador = \App\Models\User::where('rol', 'INVENTARIADOR')->where('estado', 'ACTIVO')->first();
+        if ($inventariador && !in_array($inventariador->id_usuario, $idsAgregados)) {
+            $firmantes[] = ['nombre' => $inventariador->nombre_completo, 'ci' => $inventariador->ci, 'rol' => 'INVENTARIADOR'];
+            $idsAgregados[] = $inventariador->id_usuario;
+        }
+
+        $rector = \App\Models\User::where('rol', 'RECTOR')->where('estado', 'ACTIVO')->first()
+               ?? \App\Models\User::where('rol', 'DIRECTOR')->where('estado', 'ACTIVO')->first();
+        if ($rector && !in_array($rector->id_usuario, $idsAgregados)) {
+            $firmantes[] = ['nombre' => $rector->nombre_completo, 'ci' => $rector->ci, 'rol' => 'RECTOR'];
+            $idsAgregados[] = $rector->id_usuario;
+        }
+
+        if (empty($firmantes)) {
+            $firmantes = [
+                ['nombre' => 'Lic. Patricia Regina Flores Chuquimia', 'ci' => '3451328', 'rol' => 'CUSTODIO'],
+                ['nombre' => 'Lic. Johnny Chavez Quispe', 'ci' => '6032467', 'rol' => 'CUSTODIO'],
+                ['nombre' => 'Lic. Eliza Nina Coronel', 'ci' => '4286280', 'rol' => 'CUSTODIO'],
+                ['nombre' => 'Lic. Ana Lía Zapana Cortez', 'ci' => '4756925', 'rol' => 'ADMINISTRADORA'],
+                ['nombre' => 'Lic. Juan Carlos Osco', 'ci' => '4243543', 'rol' => 'INVENTARIADOR'],
+                ['nombre' => 'Lic. Jhimmy Ovidio Sirpa', 'ci' => '4960313', 'rol' => 'RECTOR'],
+            ];
+        }
+
+        $cols = 3;
+        $chunks = array_chunk($firmantes, $cols);
+    @endphp
+
+    {{-- 🔽 ESPACIO ANTES DE LAS FIRMAS 🔽 --}}
+    <div style="height: 25px; line-height: 25px; font-size: 1px; color: #000;">&nbsp;</div>
+
+    {{-- 🔽 TABLA DE FIRMAS 🔽 --}}
+    <table style="width:100%; border-collapse:collapse;">
+        @foreach ($chunks as $fila)
             <tr>
                 @foreach ($fila as $f)
-                    <td style="width: 33.33%; vertical-align: top; padding: 10px 10px 2px 10px; text-align: center;">
-                        <div class="linea" style="border-top: 1px solid #000; padding-top: 3px; display: inline-block; width: 75%; font-size: 8px;">
-                            {{ $f['nombre'] }}<br>
-                            C.I.: {{ $f['ci'] }}<br>
-                            <small style="font-size: 7px; color: #555;">{{ $f['rol'] }}</small>
+                    <td style="width:33.33%; vertical-align:top; text-align:center; padding: 25px 10px 20px 10px; color:#000;">
+
+                        {{-- ESPACIO PARA FIRMAR (igual en todas las filas) --}}
+                        <div style="height: 50px; line-height: 1px; font-size: 1px; color:#000;">&nbsp;</div>
+
+                        {{-- LÍNEA DE FIRMA --}}
+                        <div style="border-bottom: 1.5px solid #000; width: 85%; margin: 0 auto 4px auto;"></div>
+
+                        <div style="font-weight:bold; font-size:9px; color:#000; margin-bottom:1px;">
+                            {{ $f['nombre'] }}
+                        </div>
+                        <div style="font-size:8px; color:#333; margin-bottom:1px;">
+                            C.I.: {{ $f['ci'] }}
+                        </div>
+                        <div style="font-size:7.5px; color:#555; text-transform:uppercase; letter-spacing:0.3px;">
+                            {{ $f['rol'] }}
                         </div>
                     </td>
                 @endforeach
-                @for ($i = count($fila); $i < 3; $i++)
-                    <td></td>
+                @for ($i = count($fila); $i < $cols; $i++)
+                    <td style="width:33.33%;"></td>
                 @endfor
             </tr>
+            {{-- Separación entre filas de firmas --}}
+            <tr><td colspan="{{ $cols }}" style="height: 10px; font-size:1px; color:#000;">&nbsp;</td></tr>
         @endforeach
     </table>
 
-    {{-- LEYENDAS EN TEXTO PURO (SIN TABLAS, LETRA PEQUEÑA) --}}
+    {{-- 🔽 ESPACIO ANTES DE LAS LEYENDAS 🔽 --}}
+    <div style="height: 15px; line-height: 15px; font-size: 1px; color:#000;">&nbsp;</div>
+
+    {{-- LEYENDAS EN TEXTO PURO --}}
     <div class="leyendas-texto-libre">
         <div style="margin-bottom: 3px;">
-            <strong>ESTADO:</strong> 
-            <strong>B</strong> BUENO &nbsp;&bull;&nbsp; 
-            <strong>R</strong> REGULAR &nbsp;&bull;&nbsp; 
-            <strong>M</strong> MALO &nbsp;&bull;&nbsp; 
+            <strong>ESTADO:</strong>
+            <strong>B</strong> BUENO &nbsp;&bull;&nbsp;
+            <strong>R</strong> REGULAR &nbsp;&bull;&nbsp;
+            <strong>M</strong> MALO &nbsp;&bull;&nbsp;
             <strong>FF</strong> FUERA DE FUNCIONAMIENTO
         </div>
         <div>
-            <strong>FUENTES:</strong> 
-            <strong>GD</strong> GOBIERNO DEPARTAMENTAL &nbsp;&bull;&nbsp; 
-            <strong>GM</strong> GOBIERNO MUNICIPAL &nbsp;&bull;&nbsp; 
-            <strong>GN</strong> GOBIERNO NACIONAL &nbsp;&bull;&nbsp; 
-            <strong>PSP</strong> PROYECTO SOCIO PRODUCTIVO &nbsp;&bull;&nbsp; 
-            <strong>ADQ</strong> ADQUISICIÓN &nbsp;&bull;&nbsp; 
-            <strong>RPC</strong> RECURSOS PROPIOS POR CARRERA &nbsp;&bull;&nbsp; 
-            <strong>RPI</strong> RECURSOS PROPIOS INSTITUCIONALES &nbsp;&bull;&nbsp; 
+            <strong>FUENTES:</strong>
+            <strong>GD</strong> GOBIERNO DEPARTAMENTAL &nbsp;&bull;&nbsp;
+            <strong>GM</strong> GOBIERNO MUNICIPAL &nbsp;&bull;&nbsp;
+            <strong>GN</strong> GOBIERNO NACIONAL &nbsp;&bull;&nbsp;
+            <strong>PSP</strong> PROYECTO SOCIO PRODUCTIVO &nbsp;&bull;&nbsp;
+            <strong>ADQ</strong> ADQUISICIÓN &nbsp;&bull;&nbsp;
+            <strong>RPC</strong> RECURSOS PROPIOS POR CARRERA &nbsp;&bull;&nbsp;
+            <strong>RPI</strong> RECURSOS PROPIOS INSTITUCIONALES &nbsp;&bull;&nbsp;
             <strong>OTR</strong> OTRO
         </div>
     </div>

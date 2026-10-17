@@ -43,6 +43,11 @@
                             onmouseover="this.style.background='#059669';" onmouseout="this.style.background='#10b981';">
                             ➕ Nuevo Activo
                         </button>
+                        <a href="{{ route('activos.etiquetas', ['id_categoria' => $categoria->id_categoria ?? '']) }}" target="_blank"
+                            style="background:#7c3aed;color:white;padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;text-decoration:none;"
+                            onmouseover="this.style.background='#6b21a8';" onmouseout="this.style.background='#7c3aed';">
+                            🏷️ Imprimir Etiquetas
+                        </a>
                     @endif
                 </div>
             </div>
@@ -166,11 +171,15 @@
                                             <a href="{{ route('activos.descargar_qr', $a->id_activo) }}" title="Descargar QR"
                                                 style="width:30px;height:30px;background:#f3e8ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;">⬇️</a>
 
+                                            @if (auth()->check() && auth()->user()->esAdmin())
                                             <a href="{{ route('activos.etiqueta', $a->id_activo) }}" target="_blank" title="Etiqueta"
                                                 style="width:30px;height:30px;background:#fef3c7;color:#f59e0b;border:1px solid #fde68a;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;">🏷️</a>
+                                            @endif
 
+                                            @if (auth()->check() && auth()->user()->esAdmin())
                                             <a href="{{ route('actas.alta.pdf', $a->id_activo) }}" target="_blank" title="Acta de Alta"
                                                 style="width:30px;height:30px;background:#d1fae5;color:#059669;border:1px solid #a7f3d0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;">📋</a>
+                                            @endif
 
                                             @if (auth()->check() && auth()->user()->esAdmin())
                                                 <button type="button"
@@ -276,7 +285,7 @@
         {{-- Formulario Body --}}
         <form id="activo-modal-form" method="POST" action="{{ route('activos.store') }}" enctype="multipart/form-data" novalidate style="overflow-y:auto; padding:24px 26px;">
             @csrf
-            <input type="hidden" name="id_ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
+            <input type="hidden" name="id_ambiente" id="crear-id-ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
             <input type="hidden" name="id_categoria_origen" value="{{ $categoria->id_categoria ?? '' }}">
 
             <div class="af-grid">
@@ -384,25 +393,29 @@
                 {{-- ⭐ CUSTODIO RESPONSABLE (DISEÑO MEJORADO) --}}
                 <div class="af-span-2">
                     <label class="af-label">👤 Custodio Responsable <span class="af-asterisco visible">*</span></label>
-                    <div class="custodio-wrapper">
-                        <input type="text" id="buscador-custodio-modal"
-                            class="custodio-search"
-                            placeholder="🔍 Buscar por Ítem, C.I. o Nombre..."
-                            onkeyup="filtrarCustodiosModal(this.value)"
-                            autocomplete="off">
-                        <select name="id_custodio" id="crear-id-custodio" size="5" class="custodio-list">
-                            @foreach (\App\Models\User::where('estado', 'ACTIVO')->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])->orderBy('nombre_completo')->get() as $u)
-                                @php
-                                    $itemActivo = $u->items->first();
-                                    $nroItem = $itemActivo ? 'Ítem #' . $itemActivo->numero_item : 'Sin ítem';
-                                    $textoMostrar = "{$nroItem}  ·  C.I.: {$u->ci}  ·  {$u->nombre_completo}";
-                                    $textoBusqueda = strtolower($nroItem . ' ' . $u->ci . ' ' . $u->nombre_completo);
-                                @endphp
-                                <option value="{{ $u->id_usuario }}" data-busqueda="{{ $textoBusqueda }}">
-                                    {{ $textoMostrar }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;gap:10px;">
+                            <div style="flex:1;">
+                                <label style="font-size:10px;color:#64748b;font-weight:600;">Filtrar por Carrera</label>
+                                <select id="filtro-carrera-custodio" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;font-size:12px;">
+                                    <option value="">Todas las carreras</option>
+                                    @foreach($carreras as $cr)
+                                        <option value="{{ $cr->id_carrera }}">{{ $cr->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custodio-wrapper">
+                            <input type="text" id="buscador-custodio-modal"
+                                class="custodio-search"
+                                placeholder="🔍 Buscar por Ítem, C.I. o Nombre..."
+                                onkeyup="filtrarCustodiosModal(this.value)"
+                                autocomplete="off">
+                            <select name="id_custodio" id="crear-id-custodio" size="5" class="custodio-list">
+                                <option value="">— Seleccione custodio del ambiente —</option>
+                                {{-- Custodios cargados por AJAX según el ambiente (ver cargarCustodiosModal) --}}
+                            </select>
+                        </div>
                     </div>
                     <div class="af-error" data-for="crear-id-custodio"></div>
                     <div style="font-size:10px; color:#94a3b8; margin-top:6px; font-weight:600;">
@@ -489,7 +502,7 @@
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="id_activo" id="edit-id-activo">
-                <input type="hidden" name="id_ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
+                <input type="hidden" name="id_ambiente" id="edit-id-ambiente" value="{{ $ambiente->id_ambiente ?? '' }}">
                 <input type="hidden" name="id_categoria_origen" value="{{ $categoria->id_categoria ?? '' }}">
 
                 <div class="af-grid">
@@ -587,20 +600,11 @@
                         <input type="text" id="edit-buscador-custodio-modal" placeholder="🔍 Buscar custodio por Nombre, C.I. o N° de Ítem..."
                             style="width:100%;padding:9px 12px;border-radius:8px 8px 0 0;border:1px solid #cbd5e1;font-size:13px;box-sizing:border-box;background:#f8fafc;"
                             onkeyup="filtrarCustodiosEditModal(this.value)">
-                        <select name="id_custodio" id="edit-id-custodio" size="4"
-                            style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
-                            @foreach (\App\Models\User::where('estado', 'ACTIVO')->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])->orderBy('nombre_completo')->get() as $u)
-                                @php
-                                    $itemActivo = $u->items->first();
-                                    $nroItem = $itemActivo ? 'Ítem #' . $itemActivo->numero_item : 'Sin ítem';
-                                    $textoBusqueda = strtolower($u->nombre_completo . ' ' . $u->ci . ' ' . ($itemActivo?->numero_item ?? ''));
-                                @endphp
-                                <option value="{{ $u->id_usuario }}" data-busqueda="{{ $textoBusqueda }}"
-                                    style="padding: 6px; border-bottom: 1px solid #f1f5f9;">
-                                    {{ $u->nombre_completo }} (C.I.: {{ $u->ci }} · {{ $nroItem }})
-                                </option>
-                            @endforeach
-                        </select>
+                            <select name="id_custodio" id="edit-id-custodio" size="4"
+                                style="width:100%;padding:8px;border-radius:0 0 8px 8px;border:1px solid #cbd5e1;border-top:none;font-size:13px;background:white;box-sizing:border-box;">
+                                <option value="">— Seleccione custodio del ambiente —</option>
+                                {{-- Custodios cargados por AJAX según el ambiente (ver cargarCustodiosEditModal) --}}
+                            </select>
                         <div class="af-error" data-for="edit-id-custodio"></div>
                     </div>
 
@@ -759,11 +763,15 @@
 
         function filtrarCustodiosModal(texto) {
             const filtro = texto.toLowerCase().trim();
+            const carreraFiltro = document.getElementById('filtro-carrera-custodio')?.value || '';
             const select = document.getElementById('crear-id-custodio');
             for (let i = 0; i < select.options.length; i++) {
                 const opt = select.options[i];
                 const busqueda = opt.getAttribute('data-busqueda') || "";
-                opt.style.display = busqueda.includes(filtro) ? "" : "none";
+                const carreraOpt = opt.getAttribute('data-carrera') || "";
+                const coincideTexto = busqueda.includes(filtro);
+                const coincideCarrera = !carreraFiltro || carreraOpt === carreraFiltro;
+                opt.style.display = (coincideTexto && coincideCarrera) ? "" : "none";
             }
         }
 
@@ -846,7 +854,40 @@
             limpiarTodosLosErrores();
             document.getElementById('select-tipo-bien').value = 'ACTIVO_FIJO';
             cambiarTipoBien('ACTIVO_FIJO');
+            const idAmbiente = document.getElementById('crear-id-ambiente')?.value || '';
+            cargarCustodiosModal(idAmbiente);
             document.getElementById('activo-modal').style.display = 'flex';
+        }
+
+        async function cargarCustodiosModal(idAmbiente) {
+            const select = document.getElementById('crear-id-custodio');
+            if (!select) return;
+            select.innerHTML = '<option value="">— Cargando custodios del ambiente —</option>';
+            if (!idAmbiente) {
+                select.innerHTML = '<option value="">— Seleccione ambiente primero —</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`/activos/custodios/${idAmbiente}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+                const data = await res.json();
+                select.innerHTML = '<option value="">— Seleccione custodio del ambiente —</option>';
+                (data || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.texto;
+                    opt.setAttribute('data-busqueda', c.busqueda || '');
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error(e);
+                select.innerHTML = '<option value="">— Error al cargar custodios —</option>';
+            }
         }
 
         function closeActivoModal() {
@@ -897,13 +938,15 @@
 
         // ==================== MODAL EDITAR ====================
 
-        function openEditActivoModal(idActivo) {
-            fetch(`{{ url('/activos') }}/${idActivo}/edit`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                credentials: 'same-origin',
-            })
-            .then(res => { if (!res.ok) throw new Error('Error'); return res.json(); })
-            .then(data => {
+        async function openEditActivoModal(idActivo) {
+            try {
+                const res = await fetch(`{{ url('/activos') }}/${idActivo}/edit`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) throw new Error('Error');
+                const data = await res.json();
+
                 document.getElementById('edit-id-activo').value = data.id_activo;
                 document.getElementById('edit-codigo-activo').value = data.codigo_activo || '';
                 document.getElementById('edit-id-categoria').value = data.id_categoria || '';
@@ -917,16 +960,54 @@
                 document.getElementById('edit-estado-fisico').value = data.estado_fisico || 'B';
                 document.getElementById('edit-valor-adquisicion').value = data.valor_adquisicion || 0;
                 document.getElementById('edit-descripcion').value = data.descripcion || '';
-                document.getElementById('edit-id-custodio').value = data.id_custodio || '';
                 document.getElementById('edit-select-tipo-bien').value = data.tipo_bien || 'ACTIVO_FIJO';
 
                 cambiarTipoBienEdit(data.tipo_bien || 'ACTIVO_FIJO');
                 limpiarTodosLosErrores();
 
                 document.getElementById('edit-activo-modal-form').action = `{{ url('/activos') }}/${idActivo}`;
+
+                await cargarCustodiosEditModal(data.id_ambiente || '', data.id_custodio || '');
+
                 document.getElementById('edit-activo-modal').style.display = 'flex';
-            })
-            .catch(err => { console.error(err); mostrarToast('❌ Error al cargar el activo', 'error'); });
+            } catch (err) {
+                console.error(err);
+                mostrarToast('❌ Error al cargar el activo', 'error');
+            }
+        }
+
+        async function cargarCustodiosEditModal(idAmbiente, idCustodioSeleccionado = '') {
+            const select = document.getElementById('edit-id-custodio');
+            if (!select) return;
+            select.innerHTML = '<option value="">— Cargando custodios del ambiente —</option>';
+            if (!idAmbiente) {
+                select.innerHTML = '<option value="">— Seleccione ambiente primero —</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`/activos/custodios/${idAmbiente}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+                const data = await res.json();
+                select.innerHTML = '<option value="">— Seleccione custodio del ambiente —</option>';
+                (data || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.texto;
+                    opt.setAttribute('data-busqueda', c.busqueda || '');
+                    select.appendChild(opt);
+                });
+                if (idCustodioSeleccionado) {
+                    select.value = idCustodioSeleccionado;
+                }
+            } catch (e) {
+                console.error(e);
+                select.innerHTML = '<option value="">— Error al cargar custodios —</option>';
+            }
         }
 
         function closeEditActivoModal() {
@@ -1091,6 +1172,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             cambiarTipoBien('ACTIVO_FIJO');
             cambiarTipoBienEdit('ACTIVO_FIJO');
+            document.getElementById('filtro-carrera-custodio')?.addEventListener('change', function() {
+                filtrarCustodiosModal(document.getElementById('buscador-custodio-modal')?.value || '');
+            });
         });
     </script>
 @endsection

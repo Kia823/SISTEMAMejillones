@@ -95,31 +95,73 @@ class ActivoController extends Controller
     // ==========================================
     // CREATE — Solo admin
     // ==========================================
-    public function create(Request $request)
+public function create(Request $request)
     {
         $this->authorizeActivoModification();
 
         $idAmbientePreseleccionado = $request->input('id_ambiente');
 
-        $categorias = Categoria::when($idAmbientePreseleccionado, function($q) use ($idAmbientePreseleccionado) {
+        $categoria = Categoria::when($idAmbientePreseleccionado, function($q) use ($idAmbientePreseleccionado) {
             $q->where('id_ambiente', $idAmbientePreseleccionado);
         })->orderBy('nombre')->get();
 
         $ambientes  = Ambiente::with('carrera')->orderBy('nombre')->get();
         $fuentes    = FuenteFinanciamiento::orderBy('nombre')->get();
 
-        $usuarios   = User::where('estado', 'ACTIVO')
-            ->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])
-            ->orderBy('nombre_completo')
-            ->get();
+        // ⭐ Filtrar custodios por ambiente si está preseleccionado
+        $productosQuery = User::where('estado', 'ACTIVO')
+            ->with(['items' => fn($q) => $q->whereNull('item_preference.fecha_fin')])
+            ->orderBy('nombre_completo');
+
+        if ($idAmbientePreseleccionado) {
+            $productosQuery->where(function($q) use ($idAmbientePreseleccionado) {
+                // Que tenga activos en ese ambiente
+                $q->ewhereHas('activosCustodiados', function($sub) use ($idAmbientePreseleccionado) {
+                    $sub->where('id_ambiente', $idAmbientePreseleccionado);
+                })
+                // O que tenga ítems vigentes en ese ambiente
+                ->orWhereHas('itemsVigentes', function($sub) use ($idAmbientePreseleccionado) {
+                    $sub->where('items.id_ambiente', $idAmbientePreseleccionado);
+                });
+            });
+        }
+
+        $productos = $productosQuery->get();
 
         $config  = DB::table('configuraciones')->first();
         $prefijo = $config->prefijo_activo ?? 'TPM-';
         $codigoSugerido = $prefijo . date('Y') . '-' . rand(1000, 9999);
 
         return view('activos.create', compact(
-            'categorias', 'ambientes', 'fuentes', 'usuarios', 'idAmbientePreseleccionado', 'codigoSugerido'
+            'categoria', 'ambientes', 'fuentes', 'productos', 'idAmbientePreseleccionado', 'codigoSugerido'
         ));
+    }
+
+    /**
+     * ⭐ Endpoint AJAX para obtener custodios de un ambiente específico
+     */
+    public function custodiosPorAmbiente($idAmbiente)
+    {
+        $this->authorizeActivoModification();
+
+        $ambiente = Ambiente::with('custodios.items')->findOrFail($idAmbiente);
+
+        $custodios = $ambiente->custodios
+            ->filter(fn($u) => $u->estado === 'ACTIVO')
+            ->map(function ($usr) {
+                $itemActivo = $usr->items->first();
+                $nroItem = $itemActivo ? 'Ítem #' . $itemActivo->numero_item : 'Sin ítem';
+                $textoMostrar = "{$nroItem} · C.I.: {$usr->ci} · {$usr->nombre_completo}";
+                $textoBusqueda = strtolower($nroItem . ' ' . $usr->ci . ' ' . $usr->nombre_completo);
+                return [
+                    'id' => $usr->id_usuario,
+                    'texto' => $textoMostrar,
+                    'busqueda' => $textoBusqueda,
+                ];
+            })
+            ->values();
+
+        return response()->json($custodios);
     }
 
     // ==========================================
@@ -274,11 +316,12 @@ class ActivoController extends Controller
         $categorias = Categoria::where('id_ambiente', $ambiente->id_ambiente ?? null)->get();
         $fuentes    = FuenteFinanciamiento::orderBy('nombre')->get();
         $usuarios   = User::where('estado', 'ACTIVO')->orderBy('nombre_completo')->get();
+        $carreras   = Carrera::orderBy('nombre')->get();
 
         return view('categorias.show', compact(
             'ambiente', 'carrera', 'categoria', 'activos', 'agrupados',
             'totalActivos', 'totalBuenos', 'totalRegulares', 'totalMalos',
-            'categorias', 'fuentes', 'usuarios'
+            'categorias', 'fuentes', 'usuarios', 'carreras'
         ));
     }
 
@@ -633,12 +676,13 @@ class ActivoController extends Controller
 
         $fuentes    = FuenteFinanciamiento::orderBy('nombre')->get();
         $usuarios   = User::where('estado', 'ACTIVO')->orderBy('nombre_completo')->get();
+        $carreras   = Carrera::orderBy('nombre')->get();
 
         return view('categorias.grupo', compact(
             'categoria', 'ambiente', 'carrera',
             'activos', 'nombreDecoded',
             'totalActivos', 'totalBuenos', 'totalRegulares', 'totalMalos',
-            'fuentes', 'usuarios'
+            'fuentes', 'usuarios', 'carreras'
         ));
     }
 
@@ -662,6 +706,80 @@ class ActivoController extends Controller
         }
 
         return view('activos.etiqueta', compact('activo', 'qrImage'));
+    }
+
+    // ============================================================
+    // ETIQUETAS MÚLTIPLES — PDF para imprimir varias de una vez
+    // ============================================================
+    public function etiquetas(Request $request)
+    {
+        set_time_limit(300);
+        ini_set('memory_limit', '256M');
+
+        $ids = $request->input('ids', []);
+        $idCategoria = $request->input('id_categoria');
+
+        $query = ActivoFijo::with(['ambiente', 'categoria', 'fuente', 'custodio'])
+            ->where('estado_registro', '!=', 'BAJA');
+
+        if (! empty($ids)) {
+            $query->whereIn('id_activo', $ids);
+        } elseif ($idCategoria) {
+            $query->where('id_categoria', $idCategoria);
+        }
+
+        $activos = $query->orderBy('codigo_activo')->get();
+
+        if ($activos->isEmpty()) {
+            return back()->with('error', 'No hay activos para generar etiquetas.');
+        }
+
+        // Generar QRs que faltan (PNG)
+        foreach ($activos as $activo) {
+            if (! $activo->ruta_qr || ! Storage::disk('public')->exists($activo->ruta_qr)) {
+                try {
+                    $contenido = route('activos.buscarPorCodigo', ['codigo' => $activo->codigo_activo]);
+                    $fileName = 'qrcodes/' . Str::slug($activo->codigo_activo) . '-' . uniqid() . '.png';
+                    $png = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')
+                        ->size(200)
+                        ->margin(1)
+                        ->generate($contenido);
+                    Storage::disk('public')->put($fileName, $png);
+                    $activo->update(['ruta_qr' => $fileName, 'qr_code' => $contenido]);
+                } catch (\Throwable $e) {
+                    Log::warning('Error generando QR para activo ' . $activo->id_activo . ': ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Preparar data URIs para las imágenes (evita peticiones HTTP adicionales en DomPDF)
+        $logoDataUri = '';
+        $logoPath = public_path('images/logo.png');
+        if (file_exists($logoPath)) {
+            $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
+        foreach ($activos as $activo) {
+            $activo->qr_data_uri = '';
+            if ($activo->ruta_qr && Storage::disk('public')->exists($activo->ruta_qr)) {
+                $ruta = Storage::disk('public')->path($activo->ruta_qr);
+                if (file_exists($ruta)) {
+                    $ext = pathinfo($ruta, PATHINFO_EXTENSION);
+                    $mime = $ext === 'svg' ? 'image/svg+xml' : 'image/png';
+                    $activo->qr_data_uri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($ruta));
+                }
+            }
+        }
+
+        try {
+            $pdf = Pdf::loadView('activos.etiquetas', compact('activos', 'logoDataUri'))
+                ->setPaper('letter', 'portrait');
+
+            return $pdf->stream('Etiquetas_' . date('Y-m-d_His') . '.pdf');
+        } catch (\Throwable $e) {
+            Log::error('Error generando PDF de etiquetas: ' . $e->getMessage());
+            return back()->with('error', 'Error al generar el PDF de etiquetas: ' . $e->getMessage());
+        }
     }
 
     // ============================================================

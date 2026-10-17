@@ -121,9 +121,15 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     // ==========================================================
     Route::prefix('carreras')->group(function () {
         Route::get('/',             [CarreraController::class, 'index'])->name('carreras.index');
+
+        Route::middleware('rol:ADMINISTRADOR')->group(function () {
+            Route::get('/crear',           [CarreraController::class, 'create'])->name('carreras.create');
+        });
+
         Route::get('/{id_carrera}', [CarreraController::class, 'show'])->name('carreras.show');
 
         Route::middleware('rol:ADMINISTRADOR')->group(function () {
+            Route::get('/{id_carrera}/editar', [CarreraController::class, 'edit'])->name('carreras.edit');
             Route::post('/',               [CarreraController::class, 'store'])->name('carreras.store');
             Route::put('/{id_carrera}',    [CarreraController::class, 'update'])->name('carreras.update');
             Route::delete('/{id_carrera}', [CarreraController::class, 'destroy'])->name('carreras.destroy');
@@ -180,6 +186,8 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::get('/{id}/tarjeta',     [ActivoController::class, 'tarjeta'])->name('tarjeta');
         Route::get('/{id}/qr',          [ActivoController::class, 'descargarQr'])->name('descargar_qr');
         Route::get('/{id}/etiqueta',    [ActivoController::class, 'etiqueta'])->name('etiqueta');
+        Route::get('/etiquetas',        [ActivoController::class, 'etiquetas'])->name('etiquetas');
+        Route::get('/custodios/{idAmbiente}', [ActivoController::class, 'custodiosPorAmbiente'])->name('custodios');
     });
 
     // ==========================================================
@@ -280,6 +288,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
             Route::get('/{acta}',      [ActaTransferenciaController::class, 'show'])->name('show');
             Route::get('/{acta}/pdf',  [ActaTransferenciaController::class, 'pdf'])->name('pdf');
             Route::get('/{acta}/excel', [ActaTransferenciaController::class, 'excel'])->name('excel');
+            Route::get('/custodios/{idAmbiente}', [ActaTransferenciaController::class, 'custodiosPorAmbiente'])->name('custodios');
 
             Route::middleware('rol:ADMINISTRADOR')->group(function () {
                 Route::post('/{acta}/aprobar',  [ActaTransferenciaController::class, 'aprobar'])->name('aprobar');

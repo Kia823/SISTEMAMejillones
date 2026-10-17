@@ -44,46 +44,41 @@
     <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 16px;">Inventarios y Reportes Específicos</h3>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px;">
-{{-- 2. INVENTARIO POR CARRERA --}}
-        <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h4 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Inventario por Carrera</h4>
-                <span style="font-size: 10px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">Académico</span>
-            </div>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Resumen consolidado de activos por cada carrera institucional.</p>
-
-            <form method="GET" action="{{ route('reportes.pdf') }}" target="_blank" style="display: flex; flex-direction: column; gap: 12px;">
-                <select name="id_carrera" required style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;" onchange="filtrarAmbientesCarrera(this.value)">
-                    <option value="">— Seleccionar carrera —</option>
-                    @foreach($carreras as $car)
-                        <option value="{{ $car->id_carrera }}">{{ $car->nombre }}</option>
-                    @endforeach
-                </select>
-                <div style="display: flex; gap: 8px;">
-                    <button type="submit" style="flex: 1; padding: 10px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;">
-                        📄 PDF Carrera
-                    </button>
-                    <button type="submit" formaction="{{ route('reportes.excel') }}" style="flex: 1; padding: 10px; background: #16a34a; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;">
-                        📊 Excel Carrera
-                    </button>
-                </div>
-            </form>
-        </div>
         {{-- 1. INVENTARIO POR AMBIENTE --}}
         <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <h4 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Inventario por Ambiente</h4>
                 <span style="font-size: 10px; font-weight: 800; background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">Ubicación</span>
             </div>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Selecciona un ambiente específico para filtrar y exportar su reporte.</p>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Selecciona primero la carrera y luego el ambiente para exportar su reporte.</p>
 
             <form method="GET" action="{{ route('reportes.pdf') }}" target="_blank" style="display: flex; flex-direction: column; gap: 12px;">
-                <select name="id_ambiente" required style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;">
-                    <option value="">— Seleccionar ambiente —</option>
-                    @foreach($ambientes as $amb)
-                        <option value="{{ $amb->id_ambiente }}">{{ $amb->nombre }} ({{ optional($amb->carrera)->nombre }})</option>
-                    @endforeach
-                </select>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Carrera</label>
+                    <select name="id_carrera" id="filtro-carrera-reporte" style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;" onchange="filtrarAmbientesPorCarrera(this.value)">
+                        <option value="">— Seleccionar carrera —</option>
+                        @foreach($carreras as $car)
+                            <option value="{{ $car->id_carrera }}">{{ $car->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Ambiente</label>
+                    <select name="id_ambiente" id="filtro-ambiente-reporte" required style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;">
+                        <option value="">— Primero selecciona una carrera —</option>
+                        @foreach($ambientes as $amb)
+                            <option value="{{ $amb->id_ambiente }}" data-carrera="{{ optional($amb->carrera)->id_carrera }}">{{ $amb->nombre }} ({{ optional($amb->carrera)->nombre }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Tipo de Bien</label>
+                    <select name="tipo_bien" style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;">
+                        <option value="TODOS">Todos (Activos + No Activos)</option>
+                        <option value="ACTIVO_FIJO">Solo Activos Fijos</option>
+                        <option value="NO_ACTIVO">Solo No Activos</option>
+                    </select>
+                </div>
                 <div style="display: flex; gap: 8px;">
                     <button type="submit" style="flex: 1; padding: 10px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;">
                         📄 PDF Ambiente
@@ -103,15 +98,36 @@
                 <h4 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Inventario por Categoría</h4>
                 <span style="font-size: 10px; font-weight: 800; background: #fdf2f8; color: #be185d; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">Clasificación</span>
             </div>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Equipos, sillas, mesas, herramientas agrupados por categoría.</p>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Selecciona carrera, ambiente, categoría y tipo de bien para exportar su reporte.</p>
 
             <form method="GET" action="{{ route('reportes.pdf') }}" target="_blank" style="display: flex; flex-direction: column; gap: 12px;">
-                <select name="id_categoria" required style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;">
-                    <option value="">— Seleccionar categoría —</option>
-                    @foreach($categorias as $cat)
-                        <option value="{{ $cat->id_categoria }}">{{ $cat->nombre }}</option>
-                    @endforeach
-                </select>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Carrera</label>
+                    <select name="id_carrera" id="filtro-carrera-cat" style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;" onchange="filtrarAmbientesPorCarreraCat(this.value)">
+                        <option value="">— Todas las carreras —</option>
+                        @foreach($carreras as $car)
+                            <option value="{{ $car->id_carrera }}">{{ $car->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Ambiente</label>
+                    <select name="id_ambiente" id="filtro-ambiente-cat" style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;">
+                        <option value="">— Todos los ambientes —</option>
+                        @foreach($ambientes as $amb)
+                            <option value="{{ $amb->id_ambiente }}" data-carrera="{{ optional($amb->carrera)->id_carrera }}">{{ $amb->nombre }} ({{ optional($amb->carrera)->nombre }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Categoría</label>
+                    <select name="id_categoria" required style="width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; color: #1e293b; outline: none;">
+                        <option value="">— Seleccionar categoría —</option>
+                        @foreach($categorias as $cat)
+                            <option value="{{ $cat->id_categoria }}">{{ $cat->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div style="display: flex; gap: 8px;">
                     <button type="submit" style="flex: 1; padding: 10px; background: #dc2626; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;">
                         📄 PDF Categoría
@@ -166,5 +182,46 @@
 
     </div>
 
+    <script>
+        function filtrarAmbientesPorCarrera(idCarrera) {
+            const selectAmbiente = document.getElementById('filtro-ambiente-reporte');
+            const opciones = selectAmbiente.querySelectorAll('option');
+
+            selectAmbiente.value = '';
+            opciones.forEach(opt => {
+                if (opt.value === '') {
+                    opt.textContent = !idCarrera ? '— Primero selecciona una carrera —' : '— Sin ambientes en esta carrera —';
+                    opt.style.display = 'block';
+                    return;
+                }
+                const carreraOpt = opt.getAttribute('data-carrera');
+                if (!idCarrera || carreraOpt === idCarrera) {
+                    opt.style.display = 'block';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+        }
+
+        function filtrarAmbientesPorCarreraCat(idCarrera) {
+            const selectAmbiente = document.getElementById('filtro-ambiente-cat');
+            const opciones = selectAmbiente.querySelectorAll('option');
+
+            selectAmbiente.value = '';
+            opciones.forEach(opt => {
+                if (opt.value === '') {
+                    opt.textContent = !idCarrera ? '— Todos los ambientes —' : '— Sin ambientes en esta carrera —';
+                    opt.style.display = 'block';
+                    return;
+                }
+                const carreraOpt = opt.getAttribute('data-carrera');
+                if (!idCarrera || carreraOpt === idCarrera) {
+                    opt.style.display = 'block';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </div>
 @endsection

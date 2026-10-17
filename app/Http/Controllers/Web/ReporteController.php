@@ -86,11 +86,11 @@ class ReporteController extends Controller
             ->where('activos_fijos.estado_registro', '!=', 'BAJA')
             ->tipoBien($tipoBien);
 
-        if ($request->filled('carrera')) {
-            $query->where('carreras.id_carrera', $request->carrera);
+        if ($request->filled('id_carrera')) {
+            $query->where('carreras.id_carrera', $request->id_carrera);
         }
-        if ($request->filled('ambiente')) {
-            $query->where('activos_fijos.id_ambiente', $request->ambiente);
+        if ($request->filled('id_ambiente')) {
+            $query->where('activos_fijos.id_ambiente', $request->id_ambiente);
         }
         if ($request->filled('estado_fisico')) {
             $query->where('activos_fijos.estado_fisico', $request->estado_fisico);
@@ -182,11 +182,11 @@ class ReporteController extends Controller
             ->where('activos_fijos.estado_registro', '!=', 'BAJA')
             ->tipoBien($tipoBien);
 
-        if ($request->filled('carrera')) {
-            $query->where('carreras.id_carrera', $request->carrera);
+        if ($request->filled('id_carrera')) {
+            $query->where('carreras.id_carrera', $request->id_carrera);
         }
-        if ($request->filled('ambiente')) {
-            $query->where('activos_fijos.id_ambiente', $request->ambiente);
+        if ($request->filled('id_ambiente')) {
+            $query->where('activos_fijos.id_ambiente', $request->id_ambiente);
         }
         if ($request->filled('estado_fisico')) {
             $query->where('activos_fijos.estado_fisico', $request->estado_fisico);
@@ -240,7 +240,17 @@ class ReporteController extends Controller
             ];
         });
 
-        $pdf = PdfHelper::oficio('reportes.pdf.inventario_general', compact('reportes', 'tipoBien'), 'landscape');
+        // Determinar ambiente y carrera para el encabezado del PDF
+        $ambiente = null;
+        $carrera = null;
+        if ($request->filled('id_ambiente')) {
+            $ambiente = \App\Models\Ambiente::with('carrera')->find($request->id_ambiente);
+            $carrera = $ambiente?->carrera;
+        } elseif ($request->filled('id_carrera')) {
+            $carrera = \App\Models\Carrera::find($request->id_carrera);
+        }
+
+        $pdf = PdfHelper::oficio('reportes.pdf.inventario_general', compact('reportes', 'tipoBien', 'ambiente', 'carrera'), 'landscape');
         return $pdf->stream('Inventario_' . $this->sufijoTipoBien($tipoBien) . 'General_' . date('Y-m-d') . '.pdf');
     }
 
@@ -275,11 +285,11 @@ class ReporteController extends Controller
             ->where('activos_fijos.estado_registro', '!=', 'BAJA')
             ->tipoBien($tipoBien);
 
-        if ($request->filled('carrera')) {
-            $query->where('carreras.id_carrera', $request->carrera);
+        if ($request->filled('id_carrera')) {
+            $query->where('carreras.id_carrera', $request->id_carrera);
         }
-        if ($request->filled('ambiente')) {
-            $query->where('activos_fijos.id_ambiente', $request->ambiente);
+        if ($request->filled('id_ambiente')) {
+            $query->where('activos_fijos.id_ambiente', $request->id_ambiente);
         }
         if ($request->filled('estado_fisico')) {
             $query->where('activos_fijos.estado_fisico', $request->estado_fisico);

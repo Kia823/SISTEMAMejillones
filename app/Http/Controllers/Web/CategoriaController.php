@@ -16,7 +16,24 @@ class CategoriaController extends Controller
     // ============================================================
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
         $query = Categoria::with(['ambiente.carrera']);
+
+        // Filtrar por alcance del usuario
+        if ($user->esAdmin()) {
+            // administradora ve todo
+        } elseif ($user->esJefeCarrera()) {
+            $query->whereHas('ambiente', fn ($q) => $q->where('id_carrera', $user->id_carrera));
+        } else {
+            $idsAmbientes = $user->idsAmbientesVisibles();
+            if ($idsAmbientes !== null && count($idsAmbientes) > 0) {
+                $query->whereIn('id_ambiente', $idsAmbientes);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         $ambiente = null;
         if ($request->filled('id_ambiente')) {
@@ -28,7 +45,19 @@ class CategoriaController extends Controller
             ->orderBy('nombre')
             ->paginate(15);
 
-        return view('categorias.index', compact('categorias', 'ambiente'));
+        // Ambientes para el filtro (según alcance del usuario)
+        if ($user->esAdmin()) {
+            $ambientesFiltro = Ambiente::with('carrera')->orderBy('nombre')->get();
+        } elseif ($user->esJefeCarrera()) {
+            $ambientesFiltro = Ambiente::with('carrera')->where('id_carrera', $user->id_carrera)->orderBy('nombre')->get();
+        } else {
+            $idsAmbientes = $user->idsAmbientesVisibles();
+            $ambientesFiltro = $idsAmbientes && count($idsAmbientes) > 0
+                ? Ambiente::with('carrera')->whereIn('id_ambiente', $idsAmbientes)->orderBy('nombre')->get()
+                : collect();
+        }
+
+        return view('categorias.index', compact('categorias', 'ambiente', 'ambientesFiltro'));
     }
 
     // ============================================================

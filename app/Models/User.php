@@ -7,6 +7,7 @@ use App\Models\Ambiente;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -28,6 +29,10 @@ class User extends Authenticatable
     'rol'             => 'string',
     'puede_verificar' => 'boolean',  // ⭐ NUEVO
 ];
+
+    // Cache por instancia para evitar consultas repetidas en el mismo request
+    protected ?array $_idsAmbientesVisiblesCache = null;
+    protected ?array $_idsCarrerasVisiblesCache = null;
     // ============================================================
     // AUTENTICACIÓN
     // ============================================================
@@ -252,19 +257,39 @@ class User extends Authenticatable
      */
     public function idsAmbientesVisibles(): ?array
     {
+        if ($this->_idsAmbientesVisiblesCache !== null) {
+            return $this->_idsAmbientesVisiblesCache;
+        }
+
         if ($this->puedeVerTodo()) {
+            $this->_idsAmbientesVisiblesCache = null;
             return null;
         }
 
         if ($this->esJefeCarrera()) {
-            return Ambiente::query()
+            $result = Ambiente::query()
                 ->where('id_carrera', $this->id_carrera)
                 ->pluck('id_ambiente')
                 ->all();
+            $this->_idsAmbientesVisiblesCache = $result;
+            return $result;
         }
 
         if ($this->esCustodio()) {
-            return $this->ambientesCustodiados()->pluck('id_ambiente')->all();
+            $porBienes = $this->activosCustodiados()
+                ->whereNotNull('id_ambiente')
+                ->distinct()
+                ->pluck('id_ambiente');
+
+            $porItems = $this->itemsVigentes()
+                ->whereNotNull('items.id_ambiente')
+                ->pluck('items.id_ambiente');
+
+            $porPivote = collect($this->ambientesDelPivote());
+
+            $result = $porBienes->merge($porItems)->merge($porPivote)->unique()->values()->all();
+            $this->_idsAmbientesVisiblesCache = $result;
+            return $result;
         }
 
         $porBienes = $this->activosCustodiados()
@@ -276,7 +301,11 @@ class User extends Authenticatable
             ->whereNotNull('items.id_ambiente')
             ->pluck('items.id_ambiente');
 
-        return $porBienes->merge($porItems)->unique()->values()->all();
+        $porPivote = collect($this->ambientesDelPivote());
+
+        $result = $porBienes->merge($porItems)->merge($porPivote)->unique()->values()->all();
+        $this->_idsAmbientesVisiblesCache = $result;
+        return $result;
     }
 
     /**
@@ -284,7 +313,12 @@ class User extends Authenticatable
      */
     public function idsCarrerasVisibles(): ?array
     {
+        if ($this->_idsCarrerasVisiblesCache !== null) {
+            return $this->_idsCarrerasVisiblesCache;
+        }
+
         if ($this->puedeVerTodasLasCarreras()) {
+            $this->_idsCarrerasVisiblesCache = null;
             return null;
         }
 
@@ -294,7 +328,9 @@ class User extends Authenticatable
             $porAmbientes = $porAmbientes->push($this->id_carrera);
         }
 
-        return $porAmbientes->unique()->values()->all();
+        $result = $porAmbientes->unique()->values()->all();
+        $this->_idsCarrerasVisiblesCache = $result;
+        return $result;
     }
 
     /**
@@ -393,5 +429,17 @@ class User extends Authenticatable
         return $this->itemsVigentes()
             ->where('items.id_ambiente', $idAmbiente)
             ->exists();
+    }
+
+    /**
+     * Ambientes donde el usuario está registrado como custodio directo
+     * en la tabla pivote ambiente_user (aunque no tenga bienes propios).
+     */
+    private function ambientesDelPivote(): array
+    {
+        return DB::table('ambiente_user')
+            ->where('id_usuario', $this->id_usuario)
+            ->pluck('id_ambiente')
+            ->all();
     }
 }

@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Ambiente;
 use App\Models\ActivoFijo;
 use App\Models\Carrera;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Models\Categoria;
+use Illuminate\Support\Facades\Log;
 
 class AmbienteController extends Controller
 {
@@ -86,7 +88,7 @@ public function show($id)
         $user = Auth::user();
 
         // 1. Cargar el ambiente, si está dentro del alcance del usuario
-        $ambiente = $user->ambientesVisibles()->with(['carrera'])->findOrFail($id);
+        $ambiente = $user->ambientesVisibles()->with(['carrera', 'custodios'])->findOrFail($id);
 
     // 2. Cargar las categorías de ese ambiente con conteo de activos y no activos
     $categorias = Categoria::where('id_ambiente', $ambiente->id_ambiente)
@@ -151,10 +153,49 @@ public function show($id)
 }
 public function asignarCustodios(Request $request, $id)
 {
+    $user = Auth::user();
+    if (! $user || ! $user->esAdmin()) {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+        }
+        abort(403, 'No autorizado.');
+    }
+
     $ambiente = Ambiente::findOrFail($id);
 
-    // Sincroniza los usuarios seleccionados (espera un array 'usuarios' desde el formulario)
-    $ambiente->custodios()->sync($request->input('usuarios', []));
+    $data = $request->validate([
+        'usuarios' => 'nullable|array',
+        'usuarios.*' => 'required|exists:usuarios,id_usuario',
+    ]);
+
+    $usuariosIds = $data['usuarios'] ?? [];
+
+    // Opcional: validar que los usuarios estén activos
+    $usuariosInvalidos = User::whereIn('id_usuario', $usuariosIds)
+        ->where('estado', '!=', 'ACTIVO')
+        ->pluck('id_usuario');
+    if (! $usuariosInvalidos->isEmpty()) {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => 'Algunos usuarios seleccionados no están activos.'], 422);
+        }
+        return back()->with('error', 'Algunos usuarios seleccionados no están activos.');
+    }
+
+    $ambiente->custodios()->sync($usuariosIds);
+
+    Log::info('Custodios asignados al ambiente', [
+        'id_ambiente' => $ambiente->id_ambiente,
+        'nombre_ambiente' => $ambiente->nombre,
+        'custodios_asignados' => $usuariosIds,
+        'asignado_por' => $user->id_usuario,
+    ]);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Docentes custodios asignados correctamente al ambiente.',
+        ]);
+    }
 
     return back()->with('success', 'Docentes custodios asignados correctamente al ambiente.');
 }
