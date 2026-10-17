@@ -10,10 +10,12 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
     libonig-dev \
+    libicu-dev \
+    libexif-dev \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip gd mbstring \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip gd mbstring bcmath intl exif pcntl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
@@ -33,8 +35,7 @@ RUN npm install && npm run build
 # ============================================================
 ENV CACHE_STORE=array \
     SESSION_DRIVER=array \
-    QUEUE_CONNECTION=sync \
-    DB_CONNECTION=sqlite
+    QUEUE_CONNECTION=sync
 
 # SQLite dummy para que artisan no falle durante el build
 RUN touch /var/www/html/database/database.sqlite
@@ -59,5 +60,5 @@ EXPOSE 8000
 # ============================================================
 CMD php artisan config:clear && \
     php artisan migrate --force && \
-    php artisan db:seed --force && \
+    php artisan db:seed --force || true && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

@@ -17,14 +17,15 @@ class DatabaseSeeder extends BaseSeeder
 {
     public function run(): void
     {
-        // ============================================================
-        // NOTA: NO se hace truncate() para que el seeder sea seguro
-        // en producción. Todos los registros usan updateOrCreate(),
-        // por lo que ejecutarlo varias veces NO duplica datos.
-        //
-        // Para limpiar TODO en desarrollo:
-        //     php artisan migrate:fresh --seed
-        // ============================================================
+        try {
+            $this->runSeeder();
+        } catch (\Throwable $e) {
+            $this->command->warn('⚠️ Seeder saltado por error: ' . $e->getMessage());
+        }
+    }
+
+    private function runSeeder(): void
+    {
 
         // ============================================================
         // 1. CARRERAS
