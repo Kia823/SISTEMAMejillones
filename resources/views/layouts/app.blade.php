@@ -516,6 +516,9 @@
                     </svg>
                     Configuración
                 </a>
+                <a href="{{ route('manual.index') }}" class="nav-item {{ request()->routeIs('manual.*') ? 'active' : '' }}">
+                    Manual de Usuario
+                </a>
             @endif
 
             <form action="{{ route('logout') }}" method="POST" class="logout-form">

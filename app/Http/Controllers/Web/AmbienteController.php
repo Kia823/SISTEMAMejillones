@@ -67,7 +67,7 @@ class AmbienteController extends Controller
         'codigo' => 'required|string|max:30|unique:ambientes,codigo',
         'nombre' => 'required|string|max:100',
         'bloque' => 'required|string|max:20',
-        'piso'   => 'required|integer|min:0',
+        'piso'   => 'required|string|max:10',
     ]);
 
     $data['id_carrera'] = $carrera->id_carrera;
@@ -138,7 +138,7 @@ public function show($id)
         ],
         'nombre' => 'required|string|max:100',
         'bloque' => 'nullable|string|max:20',
-        'piso'   => 'nullable|integer',
+        'piso'   => 'nullable|string|max:10',
     ], [
         'codigo.required' => 'El código del ambiente es obligatorio.',
         'codigo.unique'   => 'El código ingresado ya pertenece a otro ambiente.',

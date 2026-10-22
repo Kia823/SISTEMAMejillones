@@ -73,6 +73,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/manual', function () { return view('manual.index'); })->name('manual.index');
 
     // Perfil
     Route::prefix('profile')->name('profile.')->group(function () {

@@ -71,7 +71,7 @@ return new class extends Migration
             $table->string('codigo', 30)->unique();
             $table->string('nombre', 100);
             $table->string('bloque', 20)->nullable();
-            $table->integer('piso')->nullable();
+            $table->string('piso', 10)->nullable();
             $table->foreignId('id_carrera')
                   ->constrained('carreras', 'id_carrera')
                   ->cascadeOnDelete();

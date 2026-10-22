@@ -47,6 +47,10 @@
                     <div id="contador-observados" style="font-size: 22px; font-weight: 800; color: #fde047; transition: transform 0.3s;">{{ $observadosCount }}</div>
                     <div style="font-size: 10px; font-weight: 700; opacity: 0.9; text-transform: uppercase; margin-top: 2px;">Observados</div>
                 </div>
+                <div style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); padding: 14px 10px; border-radius: 12px; text-align: center;">
+                    <div id="contador-pendientes" style="font-size: 22px; font-weight: 800; color: #fca5a5; transition: transform 0.3s;">{{ $activos->count() - $verificadosCount - $observadosCount }}</div>
+                    <div style="font-size: 10px; font-weight: 700; opacity: 0.9; text-transform: uppercase; margin-top: 2px;">Pendientes</div>
+                </div>
             </div>
         @endif
     </div>
@@ -318,7 +322,7 @@
                                             <button type="button" onclick="abrirModalObservacion('{{ $rowId }}', '{{ $act->codigo_activo }}', {{ $act->id_activo }}, '{{ $act->estado_fisico }}')" title="Observar" style="padding: 8px 14px; background: #ca8a04; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(202,138,4,0.2);">
                                                 ⚠ Observar
                                             </button>
-                                        </div>
+             </div>
                                     @else
                                         <span style="color: #94a3b8; font-size: 11px; font-style: italic; font-weight: 600;">Solo lectura</span>
                                     @endif
@@ -623,12 +627,15 @@
         document.getElementById('form-filtros').submit();
     }
 
-    function actualizarContadores() {
+     function actualizarContadores() {
         const verificados = document.querySelectorAll('tr.fila-verificada').length;
         const observados  = document.querySelectorAll('tr.fila-observada').length;
+        const totalFilas = document.querySelectorAll('tr[data-id]').length;
+        const pendCount = totalFilas - verificados - observados;
 
         const elVerif = document.getElementById('contador-verificados');
         const elObs   = document.getElementById('contador-observados');
+        const elPend  = document.getElementById('contador-pendientes');
 
         if (elVerif) {
             elVerif.textContent = verificados;
@@ -639,6 +646,11 @@
             elObs.textContent = observados;
             elObs.style.transform = 'scale(1.15)';
             setTimeout(() => elObs.style.transform = 'scale(1)', 200);
+        }
+        if (elPend) {
+            elPend.textContent = pendCount;
+            elPend.style.transform = 'scale(1.15)';
+            setTimeout(() => elPend.style.transform = 'scale(1)', 200);
         }
     }
 
@@ -711,6 +723,23 @@
 
     async function finalizarVerificacion() {
         if (!AMBIENTE_ID) return;
+
+        const totalFilas = document.querySelectorAll('tr[data-id]').length;
+        const verificados = document.querySelectorAll('tr.fila-verificada').length;
+        const observados  = document.querySelectorAll('tr.fila-observada').length;
+        const pendientes  = totalFilas - verificados - observados;
+
+        if (pendientes > 0) {
+            const r = await Swal.fire({
+                title: 'Faltan activos por verificar',
+                text: `Hay ${pendientes} activo(s) sin verificar. ¿Deseas finalizar de todos modos?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Finalizar de todos modos',
+                cancelButtonText: 'Cancelar',
+            });
+            if (!r.isConfirmed) return;
+        }
 
         const tiempoFormateado = formatearTiempo(segundosTranscurridos);
 
@@ -989,6 +1018,10 @@
             const filaTabla = document.getElementById(rowId);
             if (filaTabla) {
                 await marcarCorrecto(rowId, activo.id_activo);
+                const tbody = filaTabla.parentNode;
+                if (tbody && tbody.firstChild !== filaTabla) {
+                    tbody.insertBefore(filaTabla, tbody.firstChild);
+                }
                 mostrarNotificacion(`✅ Activo ${activo.codigo_activo} validado correctamente.`, 'success');
             } else {
                 mostrarNotificacion(`⚠️ El activo ${activo.codigo_activo} fue reconocido, pero no pertenece a la categoría filtrada actual.`, 'warning');
@@ -1014,6 +1047,11 @@
 
                 if (document.getElementById(rowId)) {
                     await marcarCorrecto(rowId, local.id_activo);
+                    const filaLocal = document.getElementById(rowId);
+                    const tbodyLocal = filaLocal ? filaLocal.parentNode : null;
+                    if (tbodyLocal && tbodyLocal.firstChild !== filaLocal) {
+                        tbodyLocal.insertBefore(filaLocal, tbodyLocal.firstChild);
+                    }
                     mostrarNotificacion(`📡 Sin conexión: ${local.codigo_activo} se verificó localmente y se enviará luego.`, 'warning');
                 } else {
                     mostrarNotificacion(`⚠️ ${local.codigo_activo} fue reconocido, pero no está en la categoría filtrada.`, 'warning');
