@@ -9,6 +9,7 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ActaRecepcionController extends Controller
 {
@@ -53,68 +54,114 @@ class ActaRecepcionController extends Controller
     // PDF — Acta de ALTA (ingreso de nuevo activo)
     // ============================================================
     public function actaAltaPdf($activo_id)
-{
-    $activo = ActivoFijo::with(['categoria', 'ambiente.carrera', 'fuente', 'custodio'])
-        ->findOrFail($activo_id);
+    {
+        $activo = ActivoFijo::with([
+            'categoria',
+            'ambiente.carrera',
+            'fuente',
+            'custodio',
+            'item'
+        ])->findOrFail($activo_id);
 
-    $pdf = Pdf::loadView('actas.alta.pdf', compact('activo'))
-        ->setPaper([0, 0, 612, 936], 'portrait') // OFICIO
-        ->setOption(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+        $responsables = collect();
+        $ambienteId = $activo->id_ambiente ?? null;
+        if ($activo->item && ! $ambienteId) {
+            $ambienteId = $activo->item->id_ambiente ?? null;
+        }
 
-    return $pdf->stream('Acta_Alta_' . $activo->codigo_activo . '.pdf');
-}
-// ============================================================
-// PDF — ACTA DE RECEPCIÓN INDIVIDUAL (un solo activo)
-// ============================================================
-public function actaRecepcionActivoPdf($activo_id)
-{
-    // Cargar el activo con todas sus relaciones
-    $activo = ActivoFijo::with([
-        'categoria',
-        'ambiente.carrera',
-        'fuente',
-        'custodio',
-    ])->findOrFail($activo_id);
+        if ($ambienteId) {
+            $rows = DB::table('ambiente_user')
+                ->join('usuarios', 'usuarios.id_usuario', '=', 'ambiente_user.id_usuario')
+                ->where('ambiente_user.id_ambiente', $ambienteId)
+                ->where('usuarios.estado', 'ACTIVO')
+                ->orderBy('usuarios.nombre_completo')
+                ->select('usuarios.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci', 'usuarios.cargo', 'usuarios.rol', 'usuarios.estado')
+                ->distinct()
+                ->get();
+            foreach ($rows as $row) {
+                $u = new User((array) $row);
+                $u->exists = true;
+                $responsables->push($u);
+            }
+        }
 
-    // Construir una colección con un solo activo para reutilizar la vista
-    $activos = collect([$activo]);
+        if ($responsables->isEmpty() && $activo->id_item) {
+            $rows = DB::table('item_usuario')
+                ->join('usuarios', 'usuarios.id_usuario', '=', 'item_usuario.id_usuario')
+                ->where('item_usuario.id_item', $activo->id_item)
+                ->whereNull('item_usuario.fecha_fin')
+                ->where('usuarios.estado', 'ACTIVO')
+                ->select('usuarios.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci', 'usuarios.cargo', 'usuarios.rol', 'usuarios.estado', 'item_usuario.tipo')
+                ->orderByRaw("FIELD(item_usuario.tipo, 'TITULAR', 'RESPONSABLE', 'SECUNDARIO')")
+                ->orderBy('usuarios.nombre_completo')
+                ->get();
+            foreach ($rows as $row) {
+                $u = new User((array) $row);
+                $u->exists = true;
+                $responsables->push($u);
+            }
+        }
 
-    // Firmante del acta
-    $responsable = Auth::user();
+        if ($responsables->isEmpty() && $activo->custodio) {
+            $responsables = collect([$activo->custodio]);
+        }
 
-    // Generar PDF en OFICIO
-    $pdf = Pdf::loadView('actas.recepcion.pdf_individual', compact('activo', 'activos', 'responsable'))
-        ->setPaper([0, 0, 612, 936], 'portrait') // OFICIO
-        ->setOption([
-            'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled'      => true,
-        ]);
+        $pdf = Pdf::loadView('actas.alta.pdf', compact('activo', 'responsables'))
+            ->setPaper('legal', 'landscape')
+            ->setOption([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => false,
+                'defaultFont' => 'Arial',
+                'isFontSubsetting' => true,
+                'dpi' => 96,
+            ]);
 
-    return $pdf->stream('Acta_Recepcion_' . $activo->codigo_activo . '.pdf');
-}
-// ============================================================
-// EXCEL — ACTA DE RECEPCIÓN INDIVIDUAL (un solo activo)
-// ============================================================
-public function actaRecepcionActivoExcel($activo_id)
-{
-    // Cargar el activo con todas sus relaciones
-    $activo = ActivoFijo::with([
-        'categoria',
-        'ambiente.carrera',
-        'fuente',
-        'custodio',
-    ])->findOrFail($activo_id);
+        return $pdf->stream('Acta_Alta_' . $activo->codigo_activo . '.pdf');
+    }
 
-    // Construir una colección con un solo activo
-    $activos = collect([$activo]);
+    // ============================================================
+    // PDF — ACTA DE RECEPCIÓN INDIVIDUAL (un solo activo)
+    // ============================================================
+    public function actaRecepcionActivoPdf($activo_id)
+    {
+        $activo = ActivoFijo::with([
+            'categoria',
+            'ambiente.carrera',
+            'fuente',
+            'custodio',
+        ])->findOrFail($activo_id);
 
-    // Firmante del acta
-    $responsable = Auth::user();
+        $activos = collect([$activo]);
+        $responsable = Auth::user();
 
-    // Retornar el Excel
-    return response()
-        ->view('actas.recepcion.excel_individual', compact('activo', 'activos', 'responsable'))
-        ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
-        ->header('Content-Disposition', 'attachment; filename="Acta_Recepcion_' . $activo->codigo_activo . '.xls"');
-}
+        $pdf = Pdf::loadView('actas.recepcion.pdf_individual', compact('activo', 'activos', 'responsable'))
+            ->setPaper([0, 0, 612, 936], 'portrait')
+            ->setOption([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => true,
+            ]);
+
+        return $pdf->stream('Acta_Recepcion_' . $activo->codigo_activo . '.pdf');
+    }
+
+    // ============================================================
+    // EXCEL — ACTA DE RECEPCIÓN INDIVIDUAL (un solo activo)
+    // ============================================================
+    public function actaRecepcionActivoExcel($activo_id)
+    {
+        $activo = ActivoFijo::with([
+            'categoria',
+            'ambiente.carrera',
+            'fuente',
+            'custodio',
+        ])->findOrFail($activo_id);
+
+        $activos = collect([$activo]);
+        $responsable = Auth::user();
+
+        return response()
+            ->view('actas.recepcion.excel_individual', compact('activo', 'activos', 'responsable'))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="Acta_Recepcion_' . $activo->codigo_activo . '.xls"');
+    }
 }

@@ -3,6 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <title>Acta de Entrega y Recepción — {{ $activo->codigo_activo }}</title>
+    @php
+        use Illuminate\Support\Facades\DB;
+        use App\Models\User;
+        if (!isset($responsables)) {
+            $responsables = collect();
+            $ambienteId = $activo->id_ambiente ?? null;
+            if ($activo->item && !$ambienteId) {
+                $ambienteId = $activo->item->id_ambiente ?? null;
+            }
+
+            if ($ambienteId) {
+                $rows = DB::table('ambiente_user')
+                    ->join('usuarios', 'usuarios.id_usuario', '=', 'ambiente_user.id_usuario')
+                    ->where('ambiente_user.id_ambiente', $ambienteId)
+                    ->where('usuarios.estado', 'ACTIVO')
+                    ->orderBy('usuarios.nombre_completo')
+                    ->select('usuarios.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci', 'usuarios.cargo', 'usuarios.rol', 'usuarios.estado')
+                    ->distinct()
+                    ->get();
+                foreach ($rows as $row) {
+                    $u = new User((array)$row);
+                    $u->exists = true;
+                    $responsables->push($u);
+                }
+            }
+
+            if ($responsables->isEmpty() && $activo->id_item) {
+                $rows = DB::table('item_usuario')
+                    ->join('usuarios', 'usuarios.id_usuario', '=', 'item_usuario.id_usuario')
+                    ->where('item_usuario.id_item', $activo->id_item)
+                    ->whereNull('item_usuario.fecha_fin')
+                    ->where('usuarios.estado', 'ACTIVO')
+                    ->select('usuarios.id_usuario', 'usuarios.nombre_completo', 'usuarios.ci', 'usuarios.cargo', 'usuarios.rol', 'usuarios.estado', 'item_usuario.tipo')
+                    ->orderByRaw("FIELD(item_usuario.tipo, 'TITULAR', 'RESPONSABLE', 'SECUNDARIO')")
+                    ->orderBy('usuarios.nombre_completo')
+                    ->get();
+                foreach ($rows as $row) {
+                    $u = new User((array)$row);
+                    $u->exists = true;
+                    $responsables->push($u);
+                }
+            }
+
+            if ($responsables->isEmpty() && $activo->custodio) {
+                $responsables = collect([$activo->custodio]);
+            }
+        }
+    @endphp
     <style>
         /* ============ FORMATO HORIZONTAL (LANDSCAPE) ============ */
         @page { size: 330mm 216mm; margin: 10mm 12mm; }
@@ -336,24 +384,37 @@
     {{-- ============================================================ --}}
     <table class="tabla-firmas">
         <tr>
-            <td>
-                <div class="espacio-firma"></div>
-                <div class="linea-firma">{{ $activo->custodio->nombre_completo ?? 'RESPONSABLE DE BIEN DE USO' }}</div>
-                <div class="cargo-firma" style="font-weight: bold;">RESPONSABLE DEL BIEN DE USO</div>
-            </td>
+            @php
+                $respList = $responsables->take(2);
+            @endphp
+            @foreach($respList as $resp)
+                <td>
+                    <div class="espacio-firma"></div>
+                    <div class="linea-firma">{{ $resp->nombre_completo ?? 'RESPONSABLE DE BIEN DE USO' }}</div>
+                    <div class="cargo-firma" style="font-weight: bold;">RESPONSABLE DEL BIEN DE USO</div>
+                </td>
+            @endforeach
+            @if($respList->count() == 1)
+                <td></td>
+            @endif
             <td>
                 <div class="espacio-firma"></div>
                 <div class="linea-firma">Lic. Ana Lía Zapana Cortez</div>
-                <div class="cargo-firma" style="font-weight: bold;">RESPONSABLE DE INVENTARIACION</div>
+                <div class="cargo-firma" style="font-weight: bold;">DIRECTORA ADMINISTRATIVA</div>
             </td>
         </tr>
         <tr>
-            <td>
-                <div style="font-size: 9px;"><strong>NOMBRE:</strong> {{ $activo->custodio->nombre_completo ?? '—' }}</div>
-                <div style="font-size: 9px;"><strong>C.I.:</strong> {{ $activo->custodio->ci ?? '—' }}</div>
-                <div style="font-size: 9px;"><strong>CARGO:</strong> Custodio / Docente / Estudiante</div>
-                <div style="font-size: 9px;"><strong>UNIDAD:</strong> {{ $activo->ambiente->nombre ?? 'ITPM' }}</div>
-            </td>
+            @foreach($respList as $resp)
+                <td>
+                    <div style="font-size: 9px;"><strong>NOMBRE:</strong> {{ $resp->nombre_completo ?? '—' }}</div>
+                    <div style="font-size: 9px;"><strong>C.I.:</strong> {{ $resp->ci ?? '—' }}</div>
+                    <div style="font-size: 9px;"><strong>CARGO:</strong> {{ $resp->cargo ?? $resp->rol ?? 'Custodio / Docente / Estudiante' }}</div>
+                    <div style="font-size: 9px;"><strong>UNIDAD:</strong> {{ $activo->ambiente->nombre ?? 'ITPM' }}</div>
+                </td>
+            @endforeach
+            @if($respList->count() == 1)
+                <td></td>
+            @endif
             <td>
                 <div style="font-size: 9px;"><strong>NOMBRE:</strong> Lic. Ana Lía Zapana Cortez</div>
                 <div style="font-size: 9px;"><strong>C.I.:</strong> 4756925 LP</div>

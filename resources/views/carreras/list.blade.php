@@ -7,8 +7,11 @@
         <h1 style="margin:10px 0 8px;font-size:28px;">Carreras</h1>
         <p>Listado general de carreras y sus respectivos Jefes de Carrera.</p>
     </div>
-    <div class="stat-grid">
+    <div class="stat-grid" style="align-items:center;gap:12px;">
         <div><strong>{{ $carreras->count() }}</strong><span>Carreras</span></div>
+        @if(auth()->check() && auth()->user()->esAdmin())
+            <a href="{{ route('carreras.create') }}" class="btn" style="text-decoration:none;background:#2563eb;color:#fff;border-color:#1d4ed8;">+ Nueva Carrera</a>
+        @endif
     </div>
 </section>
 
@@ -82,6 +85,11 @@
                     <a class="btn light" href="{{ route('carreras.show', $c->id_carrera) }}?nuevo_ambiente=1" style="flex:1; text-align:center; font-size:12px; padding:6px; text-decoration:none;">+ Ambiente</a>
                     @if(auth()->check() && auth()->user()->esAdmin())
                         <a class="btn" href="{{ route('carreras.edit', $c->id_carrera) }}" style="flex:1; text-align:center; font-size:12px; padding:6px; text-decoration:none; background:#f59e0b; color:#fff; border-color:#d97706;">✏️ Editar</a>
+                        <form action="{{ route('carreras.destroy', $c->id_carrera) }}" method="POST" style="flex:1;" onsubmit="return confirm('¿Eliminar la carrera {{ $c->nombre }}? Esta acción no se puede deshacer.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn" style="width:100%; font-size:12px; padding:6px; background:#dc2626; color:#fff; border-color:#b91c1c;">🗑 Eliminar</button>
+                        </form>
                     @endif
                 </div>
             </div>

@@ -28,14 +28,14 @@
 
         <label style="display:flex; flex-direction:column; font-size:12px; font-weight:700; color:#334155; gap:4px; margin-bottom:16px;">
             Código *
-            <input type="text" name="codigo" maxlength="20" style="text-transform:uppercase;" value="{{ old('codigo', $carrera->codigo) }}"
+            <input type="text" id="codigo" name="codigo" maxlength="20" style="text-transform:uppercase;" value="{{ old('codigo', $carrera->codigo) }}"
                    placeholder="Ej. SIF">
             <span class="error-msg" data-for="codigo"></span>
         </label>
 
         <label style="display:flex; flex-direction:column; font-size:12px; font-weight:700; color:#334155; gap:4px; margin-bottom:24px;">
             Nombre *
-            <input type="text" name="nombre" maxlength="100" value="{{ old('nombre', $carrera->nombre) }}"
+            <input type="text" id="nombre" name="nombre" maxlength="100" value="{{ old('nombre', $carrera->nombre) }}"
                    placeholder="Ej. Sistemas Informáticos">
             <span class="error-msg" data-for="nombre"></span>
         </label>
@@ -45,6 +45,14 @@
             <button type="submit" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">💾 Guardar Cambios</button>
         </div>
     </form>
+
+    @if(auth()->check() && auth()->user()->esAdmin())
+        <form action="{{ route('carreras.destroy', $carrera->id_carrera) }}" method="POST" style="margin-top:12px; text-align:right;" onsubmit="return confirm('¿Eliminar la carrera {{ $carrera->nombre }}? Esta acción no se puede deshacer.');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" style="background:#dc2626; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">Eliminar carrera</button>
+        </form>
+    @endif
 
     <style>
         input { width:100%; padding:10px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px; background:#fff; box-sizing:border-box; }

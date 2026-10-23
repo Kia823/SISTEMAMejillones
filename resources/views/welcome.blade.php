@@ -226,11 +226,6 @@
     </div>
 
     @if(auth()->check() && auth()->user()->esAdmin())
-        <div style="display:flex; justify-content:flex-end; margin-bottom: 20px;">
-            <a href="{{ route('carreras.create') }}" class="sis-btn-primary">
-                ➕ Nueva Carrera
-            </a>
-        </div>
     @endif
 
     {{-- ============================================================ --}}
