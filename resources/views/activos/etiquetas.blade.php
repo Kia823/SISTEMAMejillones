@@ -8,43 +8,42 @@
 
         @page {
             size: letter portrait;
-            margin: 6mm;
+            margin: 4mm;
         }
 
         body {
-            font-size: 8px;
+            font-size: 10px;
             color: #000;
-            background: #e2e8f0;
-            padding: 20px;
+            background: #fff;
+            padding: 0;
         }
 
         .sheet {
-            width: 200mm;
+            width: 202mm;
             background: white;
-            padding: 2mm;
+            padding: 1mm;
             margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,.15);
         }
 
         .sheet-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1.5px solid #0f172a;
+            border-bottom: 2px solid #000;
             padding-bottom: 3px;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
-        .sheet-header .inst   { font-size: 8px; font-weight: 800; color: #0f172a; text-transform: uppercase; }
-        .sheet-header .titulo { font-size: 9px; font-weight: 800; color: #0f172a; text-transform: uppercase; }
-        .sheet-header .gestion{ font-size: 7px; font-weight: 700; color: #64748b; }
+        .sheet-header .inst   { font-size: 10px; font-weight: 800; color: #000; text-transform: uppercase; }
+        .sheet-header .titulo { font-size: 11px; font-weight: 800; color: #000; text-transform: uppercase; }
+        .sheet-header .gestion{ font-size: 9px; font-weight: 700; color: #334155; }
 
         .subtitulo {
             text-align: center;
-            font-size: 7px;
+            font-size: 9px;
             font-weight: 800;
-            color: #64748b;
+            color: #334155;
             text-transform: uppercase;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             letter-spacing: .5px;
         }
 
@@ -52,7 +51,7 @@
         table.grid {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 1.2mm;
+            border-spacing: 2mm;
             table-layout: fixed;
         }
         table.grid td {
@@ -61,110 +60,106 @@
             padding: 0;
         }
 
-        /* ===== ETIQUETA 62mm x 20mm ===== */
+        /* ===== ETIQUETA 63mm x 28mm ===== */
         .etiqueta {
             position: relative;
-            width: 62mm;
+            width: 63mm;
             height: 20mm;
-            border: 1px solid #0f172a;
-            border-radius: 2.5px;
+            border: 1.5px solid #000;
+            border-radius: 4px;
             overflow: hidden;
-            background: #fff;
+            background: #ffffff;
         }
 
         .etiqueta-info {
             position: absolute;
             top: 0;
             left: 0;
-            right: 13mm;              /* QR más angosto */
+            right: 17mm;
             bottom: 0;
-            padding: 1mm 1.8mm;
+            padding: 1mm 1.5mm;      /* menos padding vertical */
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: space-between; /* distribuye el alto */
         }
 
         .etiqueta-header {
             display: flex;
             align-items: center;
-            gap: 2.5px;
-            padding-bottom: 0.8px;
-            border-bottom: 0.8px solid #0f172a;
+            gap: 4px;
+            padding-bottom: 1px;
+            border-bottom: 1px solid #000;
             margin-bottom: 1px;
         }
         .etiqueta-logo {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             object-fit: contain;
             flex-shrink: 0;
         }
         .etiqueta-institucion {
             flex: 1;
-            font-size: 4.3px;
+            font-size: 6.5px;
             font-weight: 800;
-            color: #0f172a;
+            color: #000;
             text-transform: uppercase;
             line-height: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
         .etiqueta-body {
             display: flex;
             flex-direction: column;
-            gap: 0.6px;
+            gap: 0.5px;
             flex: 1;
-            justify-content: center;
-            min-width: 0;
+            justify-content: space-evenly; /* mejor distribución vertical */
         }
 
         .etiqueta-row {
             display: flex;
             align-items: center;
-            gap: 1.5px;
-            font-size: 5px;
-            line-height: 1.05;
-            min-width: 0;
+            gap: 3px;
+            line-height: 1.1;
         }
         .etiqueta-row .label {
             font-weight: 800;
-            color: #0f172a;
+            color: #000000;
             text-transform: uppercase;
-            font-size: 4.5px;
-            min-width: 22px;
+            font-size: 8px;           /* antes 7.5 → más legible */
+            min-width: 30px;
             flex-shrink: 0;
         }
         .etiqueta-row .value {
             font-weight: 700;
-            color: #1e293b;
-            font-size: 5.5px;
+            color: #000000;
+            font-size: 9.5px;         /* antes 8.5 → más legible */
             flex: 1;
-            min-width: 0;
-            word-break: break-word;
         }
 
+        /* Código resalta en rojo oscuro claro sobre blanco */
         .etiqueta-codigo {
-            font-size: 7px !important;
-            font-weight: 800 !important;
+            font-size: 12px !important;  /* antes 10.5 */
+            font-weight: 900 !important;
             color: #dc2626 !important;
         }
+        
+        /* Nombre del activo bien legible */
         .etiqueta-nombre {
-            font-size: 6px !important;
-            font-weight: 800 !important;
-            color: #0f172a !important;
+            font-size: 11px !important;  /* antes 9.5 */
+            font-weight: 900 !important;
+            color: #000000 !important;
             text-transform: uppercase;
         }
 
+        /* Badge de Fuente visible */
         .etiqueta-fuente {
             display: inline-block;
-            background: #f1f5f9;
-            color: #334155;
-            font-size: 4.5px;
+            background: #e2e8f0;
+            color: #0f172a;
+            font-size: 8.5px;            /* antes 7.5 */
             font-weight: 800;
-            padding: 0.3px 2.5px;
+            padding: 0.5px 4px;
             border-radius: 2px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #94a3b8;
             text-transform: uppercase;
         }
 
@@ -174,28 +169,28 @@
             top: 0;
             right: 0;
             bottom: 0;
-            width: 13mm;
-            background: #f8fafc;
-            border-left: 1px dashed #cbd5e1;
+            width: 17mm;
+            background: #f1f5f9;
+            border-left: 1px solid #000;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0.8mm 0.4mm;
+            padding: 0.5mm;             /* menos padding para aprovechar alto */
         }
         .etiqueta-qr img {
-            width: 10mm;
-            height: 10mm;
+            width: 16mm;                /* un poco más grande */
+            height: 16mm;
             display: block;
             background: white;
             border-radius: 2px;
-            border: 0.8px solid #e2e8f0;
+            border: 1px solid #000;
         }
         .etiqueta-qr-label {
-            margin-top: 0.6px;
-            font-size: 2.6px;
+            margin-top: 1px;
+            font-size: 9px;             /* antes 4.5 → legible */
             font-weight: 800;
-            color: #64748b;
+            color: #000;
             text-transform: uppercase;
             text-align: center;
             line-height: 1;
@@ -286,9 +281,9 @@
                             @if($qrImage)
                                 <img src="{{ $qrImage }}" alt="QR">
                             @else
-                                <div style="width:10mm;height:10mm;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:bold;color:#dc2626;background:white;border:0.8px solid #e2e8f0;border-radius:2px;">QR</div>
+                                <div style="width:14mm;height:14mm;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:bold;color:#dc2626;background:white;border:1px solid #000;border-radius:2px;">QR</div>
                             @endif
-                            <div class="etiqueta-qr-label">ESCANEAR<br>PARA VERIFICAR</div>
+                            <div class="etiqueta-qr-label">ESCANEAR<br>VERIFICAR</div>
                         </div>
                     </div>
                 </td>

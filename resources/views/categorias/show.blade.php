@@ -37,10 +37,15 @@
                             onmouseover="this.style.background='#059669';" onmouseout="this.style.background='#10b981';">
                             ➕ Nuevo Activo
                         </button>
+                        <button type="button" onclick="imprimirSeleccionadosCat()"
+                            style="background:#f59e0b;color:white;padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;"
+                            onmouseover="this.style.background='#d97706';" onmouseout="this.style.background='#f59e0b';">
+                            🏷️ Imprimir seleccionados
+                        </button>
                         <a href="{{ route('activos.etiquetas', ['id_categoria' => $categoria->id_categoria ?? '']) }}" target="_blank"
                             style="background:#7c3aed;color:white;padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;text-decoration:none;"
                             onmouseover="this.style.background='#6b21a8';" onmouseout="this.style.background='#7c3aed';">
-                            🏷️ Imprimir Etiquetas
+                            🏷️ Imprimir todas
                         </a>
                     @endif
                 </div>
@@ -63,8 +68,27 @@
                     <div style="font-size:24px;font-weight:800;color:#fca5a5;">{{ $totalMalos ?? 0 }}</div>
                     <div style="font-size:11px;font-weight:700;opacity:.9;text-transform:uppercase;margin-top:4px;">Malos/F.F.</div>
                 </div>
-            </div>
         </div>
+    </div>
+
+    <script>
+        function toggleSelectAllCat(checkbox) {
+            document.querySelectorAll('.etiqueta-check-cat').forEach(ch => {
+                ch.checked = checkbox.checked;
+            });
+        }
+
+        function imprimirSeleccionadosCat() {
+            const checks = document.querySelectorAll('.etiqueta-check-cat:checked');
+            if (checks.length === 0) {
+                alert('Selecciona al menos un activo para imprimir etiquetas.');
+                return;
+            }
+            const params = new URLSearchParams();
+            checks.forEach(ch => params.append('ids[]', ch.value));
+            window.open('{{ route('activos.etiquetas') }}?' + params.toString(), '_blank');
+        }
+    </script>
 
         {{-- ============ LISTADO DE ACTIVOS ============ --}}
         <div id="activos-container" style="background:white;border-radius:16px;border:1px solid #e2e8f0;padding:25px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);">
@@ -72,6 +96,12 @@
                 <h3 style="font-size:18px;font-weight:800;color:#0f172a;margin:0;">
                     📦 Activos individuales (<span id="total-activos">{{ $totalActivos ?? 0 }}</span>)
                 </h3>
+                @if (auth()->check() && auth()->user()->esAdmin())
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#475569;cursor:pointer;">
+                        <input type="checkbox" onclick="toggleSelectAllCat(this)" style="width:16px;height:16px;">
+                        Seleccionar todos
+                    </label>
+                @endif
             </div>
 
             @if (isset($activos) && $activos->count() > 0)
@@ -79,6 +109,9 @@
                     <table style="width:100%;border-collapse:collapse;font-size:13px;vertical-align:middle;">
                         <thead>
                             <tr style="background:#f1f5f9;color:#475569;text-transform:uppercase;font-size:11px;font-weight:800;">
+                                @if (auth()->check() && auth()->user()->esAdmin())
+                                    <th style="padding:14px 10px;text-align:center;width:45px;">SEL</th>
+                                @endif
                                 <th style="padding:14px 10px;text-align:center;width:45px;">Nº</th>
                                 <th style="padding:14px 10px;text-align:center;width:65px;">QR</th>
                                 <th style="padding:14px 10px;text-align:center;width:65px;">IMAGEN</th>
@@ -95,6 +128,11 @@
                         <tbody id="activos-tbody">
                             @foreach ($activos as $i => $a)
                                 <tr style="border-bottom:1px solid #e2e8f0;">
+                                    @if (auth()->check() && auth()->user()->esAdmin())
+                                        <td style="padding:12px 10px;text-align:center;">
+                                            <input type="checkbox" class="etiqueta-check-cat" value="{{ $a->id_activo }}" style="width:16px;height:16px;">
+                                        </td>
+                                    @endif
                                     <td style="padding:12px 10px;text-align:center;color:#64748b;font-weight:800;">{{ $i + 1 }}</td>
                                     <td style="padding:12px 10px;text-align:center;">
                                         @if ($a->ruta_qr)

@@ -19,10 +19,15 @@
                     onmouseover="this.style.background='#059669';" onmouseout="this.style.background='#10b981';">
                     ➕ Nuevo Activo
                 </button>
+                <button type="button" onclick="imprimirSeleccionados()"
+                    style="background:#f59e0b;color:white;padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;"
+                    onmouseover="this.style.background='#d97706';" onmouseout="this.style.background='#f59e0b';">
+                    🏷️ Imprimir seleccionados
+                </button>
                 <a href="{{ route('activos.etiquetas') }}" target="_blank"
                     style="background:#7c3aed;color:white;padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;text-decoration:none;"
                     onmouseover="this.style.background='#6b21a8';" onmouseout="this.style.background='#7c3aed';">
-                    🏷️ Imprimir Etiquetas
+                    🏷️ Imprimir todas
                 </a>
             @endif
         </div>
@@ -100,6 +105,12 @@
                 <h3 style="font-size:18px;font-weight:800;color:#0f172a;margin:0;">
                     📦 Activos individuales (<span id="total-activos">{{ $activos->count() }}</span>)
                 </h3>
+                @if (auth()->check() && auth()->user()->esAdmin())
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#475569;cursor:pointer;">
+                        <input type="checkbox" onclick="toggleSelectAll(this)" style="width:16px;height:16px;">
+                        Seleccionar todos
+                    </label>
+                @endif
             </div>
 
             @if ($activos->count() > 0)
@@ -107,6 +118,9 @@
                     <table style="width:100%;border-collapse:collapse;font-size:13px;vertical-align:middle;">
                         <thead>
                             <tr style="background:#f1f5f9;color:#475569;text-transform:uppercase;font-size:11px;font-weight:800;">
+                                @if (auth()->check() && auth()->user()->esAdmin())
+                                    <th style="padding:14px 10px;text-align:center;width:45px;">SEL</th>
+                                @endif
                                 <th style="padding:14px 10px;text-align:center;width:45px;">Nº</th>
                                 <th style="padding:14px 10px;text-align:center;width:65px;">QR</th>
                                 <th style="padding:14px 10px;text-align:center;width:65px;">IMAGEN</th>
@@ -122,6 +136,11 @@
                         <tbody id="activos-tbody">
                             @foreach ($activos as $i => $a)
                                 <tr style="border-bottom:1px solid #e2e8f0;">
+                                    @if (auth()->check() && auth()->user()->esAdmin())
+                                        <td style="padding:12px 10px;text-align:center;">
+                                            <input type="checkbox" class="etiqueta-check" value="{{ $a->id_activo }}" style="width:16px;height:16px;">
+                                        </td>
+                                    @endif
                                     <td style="padding:12px 10px;text-align:center;color:#64748b;font-weight:800;">{{ $i + 1 }}</td>
                                     <td style="padding:12px 10px;text-align:center;">
                                         @if ($a->ruta_qr)
@@ -232,6 +251,23 @@
     <script>
         function openActivoModal() {
             document.getElementById('activo-modal')?.style.setProperty('display', 'flex', 'important');
+        }
+
+        function toggleSelectAll(checkbox) {
+            document.querySelectorAll('.etiqueta-check').forEach(ch => {
+                ch.checked = checkbox.checked;
+            });
+        }
+
+        function imprimirSeleccionados() {
+            const checks = document.querySelectorAll('.etiqueta-check:checked');
+            if (checks.length === 0) {
+                alert('Selecciona al menos un activo para imprimir etiquetas.');
+                return;
+            }
+            const params = new URLSearchParams();
+            checks.forEach(ch => params.append('ids[]', ch.value));
+            window.open('{{ route('activos.etiquetas') }}?' + params.toString(), '_blank');
         }
 
         function openEditActivoModal(idActivo) {

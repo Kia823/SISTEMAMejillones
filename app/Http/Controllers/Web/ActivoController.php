@@ -771,12 +771,13 @@ public function create(Request $request)
             }
         }
 
-        try {
+          try {
             $pdf = Pdf::loadView('activos.etiquetas', compact('activos', 'logoDataUri'))
-                ->setPaper('letter', 'portrait');
+                ->setPaper('letter', 'portrait')
+                ->setOption(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'dpi' => 150]);
 
             return $pdf->stream('Etiquetas_' . date('Y-m-d_His') . '.pdf');
-        } catch (\Throwable $e) {
+          } catch (\Throwable $e) {
             Log::error('Error generando PDF de etiquetas: ' . $e->getMessage());
             return back()->with('error', 'Error al generar el PDF de etiquetas: ' . $e->getMessage());
         }
