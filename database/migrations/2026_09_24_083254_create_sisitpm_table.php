@@ -19,9 +19,9 @@ return new class extends Migration
     //   9. activos_fijos (FK a todo + imágenes adicionales)
     //  10. actas_baja
     //  11. actas_transferencia
-    //  12. verificaciones_fisicas
-    //  13. historial_titulares
-    //  14. configuraciones
+    //  12. acta_transferencia_activo (pivot acta ↔ activo)
+    //  13. verificaciones_fisicas
+    //  14. historial_titulares
     // ============================================================
     public function up(): void
     {
@@ -181,8 +181,9 @@ return new class extends Migration
 
             // Identificación
             $table->string('codigo_activo', 50)->unique();
-            $table->enum('tipo_bien', ['ACTIVO_FIJO', 'NO_ACTIVO'])
+            $table->enum('tipo_bien', ['ACTIVO_FIJO', 'NO_ACTIVO', 'RV'])
                   ->default('ACTIVO_FIJO');
+            $table->enum('rv', ['NO', 'SI'])->default('NO');
             $table->string('nombre', 150);
 
             // Descripción
@@ -251,8 +252,19 @@ return new class extends Migration
             $table->foreignId('id_usuario')
                   ->constrained('usuarios', 'id_usuario');
             $table->text('motivo');
+            $table->string('causal_baja')->nullable();
             $table->date('fecha_baja');
             $table->string('archivo_resolucion')->nullable();
+
+            // Evidencias fotográficas
+            $table->string('foto_evidencia')->nullable();
+            $table->string('foto_evidencia_1')->nullable();
+            $table->string('foto_evidencia_2')->nullable();
+            $table->string('foto_evidencia_3')->nullable();
+
+            // Responsable del acta
+            $table->string('responsable_nombre')->nullable();
+            $table->string('responsable_ci')->nullable();
 
             // Flujo de aprobación
             $table->enum('estado', ['PENDIENTE', 'APROBADA', 'RECHAZADA'])
@@ -320,7 +332,24 @@ return new class extends Migration
         });
 
         // =====================================================
-        // 12. VERIFICACIONES FÍSICAS
+        // 12. ACTA_TRANSFERENCIA_ACTIVO (Pivot acta ↔ activo)
+        // =====================================================
+        Schema::create('acta_transferencia_activo', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('id_acta_transferencia')
+                  ->constrained('actas_transferencia', 'id_acta_transferencia')
+                  ->cascadeOnDelete();
+            $table->foreignId('id_activo')
+                  ->constrained('activos_fijos', 'id_activo')
+                  ->cascadeOnDelete();
+            $table->integer('cantidad')->default(1);
+            $table->timestamps();
+
+            $table->unique(['id_acta_transferencia', 'id_activo'], 'uq_acta_activo');
+        });
+
+        // =====================================================
+        // 13. VERIFICACIONES FÍSICAS
         // =====================================================
         Schema::create('verificaciones_fisicas', function (Blueprint $table) {
             $table->id('id_verificacion');
@@ -362,7 +391,7 @@ return new class extends Migration
         });
 
         // =====================================================
-        // 13. HISTORIAL DE TITULARES
+        // 14. HISTORIAL DE TITULARES
         // =====================================================
         Schema::create('historial_titulares', function (Blueprint $table) {
             $table->id('id_historial');
@@ -396,32 +425,13 @@ return new class extends Migration
 
             $table->index(['id_item', 'fecha_evento'], 'idx_hist_item_fecha');
         });
-
-        // =====================================================
-        // 14. CONFIGURACIONES
-        // =====================================================
-        Schema::create('configuraciones', function (Blueprint $table) {
-            $table->id('id_configuracion');
-            $table->string('institucion_nombre')
-                  ->default('Instituto Tecnológico "Puerto de Mejillones"');
-            $table->string('institucion_direccion')
-                  ->nullable()
-                  ->default('El Alto, La Paz - Bolivia');
-            $table->string('institucion_director')
-                  ->nullable()
-                  ->default('Lic. Jimmy Ovidio Sirpa Choque');
-            $table->string('gestion_fiscal', 10)->nullable()->default('2026');
-            $table->string('prefijo_activo', 20)->nullable()->default('TPM-');
-            $table->boolean('validacion_estricta')->default(true);
-            $table->timestamps();
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('configuraciones');
         Schema::dropIfExists('historial_titulares');
         Schema::dropIfExists('verificaciones_fisicas');
+        Schema::dropIfExists('acta_transferencia_activo');
         Schema::dropIfExists('actas_transferencia');
         Schema::dropIfExists('actas_baja');
         Schema::dropIfExists('activos_fijos');

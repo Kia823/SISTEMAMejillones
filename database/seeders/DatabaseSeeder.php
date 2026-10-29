@@ -31,13 +31,13 @@ class DatabaseSeeder extends BaseSeeder
         // 1. CARRERAS
         // ============================================================
         $carreras = [
-            ['codigo' => 'SIF', 'nombre' => 'Sistemas Informáticos'],
-            ['codigo' => 'INA', 'nombre' => 'Industrias de Alimentos'],
-            ['codigo' => 'GTR', 'nombre' => 'Gastronomía'],
-            ['codigo' => 'MAZ', 'nombre' => 'Mecánica Automotriz'],
             ['codigo' => 'MEI', 'nombre' => 'Mecánica Industrial'],
+            ['codigo' => 'MAZ', 'nombre' => 'Mecánica Automotriz'],
+            ['codigo' => 'INA', 'nombre' => 'Industrias de Alimentos'],
+            ['codigo' => 'SIF', 'nombre' => 'Sistemas Informáticos'],
+            ['codigo' => 'GTR', 'nombre' => 'Gastronomía'],
             ['codigo' => 'ELC', 'nombre' => 'Electrónica'],
-            ['codigo' => 'AGP', 'nombre' => 'Agropecuaria'],
+            ['codigo' => 'AGRO', 'nombre' => 'Agropecuaria'],
             ['codigo' => 'ADM', 'nombre' => 'Unidades Administrativas'],
         ];
 
@@ -53,7 +53,7 @@ class DatabaseSeeder extends BaseSeeder
         $mazId = $carreraIds['MAZ'];
         $meiId = $carreraIds['MEI'];
         $elcId = $carreraIds['ELC'];
-        $agpId = $carreraIds['AGP'];
+        $agroId = $carreraIds['AGRO'];
         $admId = $carreraIds['ADM'];
 
         // ============================================================
@@ -278,11 +278,11 @@ class DatabaseSeeder extends BaseSeeder
             ['ci' => '4367554', 'nombre_completo' => 'Javier Jimmy Tarqui Valeriano', 'email' => 'javier.tarqui@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente', 'unidad' => 'Escuela de Electrónica', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $elcId, 'puede_verificar' => false, 'items' => ['157']],
             ['ci' => '3530492', 'nombre_completo' => 'Juan Carlos Miranda Sanchez', 'email' => 'juan.miranda@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente', 'unidad' => 'Escuela de Electrónica', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $elcId, 'puede_verificar' => false, 'items' => ['164']],
 
-            // ---------------- TRANSVERSALES / AGP ----------------
+            // ---------------- TRANSVERSALES / AGRO ----------------
             ['ci' => '4810184', 'nombre_completo' => 'Venancio Esteban Cora Quispe', 'email' => 'venancio.cora@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente', 'unidad' => 'Áreas Transversales', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => null, 'puede_verificar' => false, 'items' => ['153']],
-            ['ci' => '3425619', 'nombre_completo' => 'Eloy Tantani Coaquira', 'email' => 'eloy.tantani@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente Agropecuaria', 'unidad' => 'Sub Sede Corpa - Agropecuaria', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $agpId, 'puede_verificar' => false, 'items' => ['155']],
-            ['ci' => '5972043', 'nombre_completo' => 'Felipa Zambrana Mamani', 'email' => 'felipa.zambrana@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente Agropecuaria', 'unidad' => 'Sub Sede Corpa - Agropecuaria', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $agpId, 'puede_verificar' => false, 'items' => ['156']],
-            ['ci' => '3489128', 'nombre_completo' => 'Santiago Chambi Macuchapi', 'email' => 'santiago.chambi@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente Agropecuaria', 'unidad' => 'Sub Sede Corpa - Agropecuaria', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $agpId, 'puede_verificar' => false, 'items' => ['161']],
+            ['ci' => '3425619', 'nombre_completo' => 'Eloy Tantani Coaquira', 'email' => 'eloy.tantani@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente Agropecuaria', 'unidad' => 'Sub Sede Corpa - Agropecuaria', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $agroId, 'puede_verificar' => false, 'items' => ['155']],
+            ['ci' => '5972043', 'nombre_completo' => 'Felipa Zambrana Mamani', 'email' => 'felipa.zambrana@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente Agropecuaria', 'unidad' => 'Sub Sede Corpa - Agropecuaria', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $agroId, 'puede_verificar' => false, 'items' => ['156']],
+            ['ci' => '3489128', 'nombre_completo' => 'Santiago Chambi Macuchapi', 'email' => 'santiago.chambi@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente Agropecuaria', 'unidad' => 'Sub Sede Corpa - Agropecuaria', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => $agroId, 'puede_verificar' => false, 'items' => ['161']],
             ['ci' => '6138095', 'nombre_completo' => 'Pamela Quispe Coria', 'email' => 'pamela.quispe@itpm.edu.bo', 'password' => Hash::make('docente123'), 'cargo' => 'Docente', 'unidad' => 'Áreas Transversales', 'rol' => 'DOCENTE_CUSTODIO', 'estado' => 'ACTIVO', 'id_carrera' => null, 'puede_verificar' => false, 'items' => ['711']],
         ];
 

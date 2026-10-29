@@ -310,7 +310,15 @@ class UsuarioController extends Controller
 
         $query = User::query()
             ->with(['items', 'carrera'])
-            ->where('estado', 'ACTIVO');
+            ->where(function ($q) use ($termino) {
+                $q->where('estado', 'ACTIVO');
+
+                if ($termino !== '' && preg_match('/^[0-9]{1,10}$/', $termino)) {
+                    $q->orWhereHas('items', function ($itemQuery) use ($termino) {
+                        $itemQuery->where('numero_item', $termino);
+                    });
+                }
+            });
 
         // Filtros: carrera, unidad organizacional y rol
         if ($request->filled('carrera_id')) {

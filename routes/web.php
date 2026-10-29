@@ -11,8 +11,8 @@ use App\Http\Controllers\Web\CarreraController;
 use App\Http\Controllers\Web\CategoriaController;
 use App\Http\Controllers\Web\ConfiguracionController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\ImportarActivosController;
 use App\Http\Controllers\Web\ItemController;
-use App\Http\Controllers\Web\LiberacionController;
 use App\Http\Controllers\Web\ReporteController;
 use App\Http\Controllers\Web\SincronizacionController;
 use App\Http\Controllers\Web\UsuarioController;
@@ -74,6 +74,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/manual', function () { return view('manual.index'); })->name('manual.index');
+    Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion.index');
 
     // Perfil
     Route::prefix('profile')->name('profile.')->group(function () {
@@ -182,13 +183,19 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::post('/',         [ActivoController::class, 'store'])->name('store')->middleware('rol:ADMINISTRADOR');
         Route::get('/{id}/edit', [ActivoController::class, 'edit'])->name('edit')->middleware('rol:ADMINISTRADOR');
         Route::put('/{id}',      [ActivoController::class, 'update'])->name('update')->middleware('rol:ADMINISTRADOR');
-        Route::delete('/{id}',   [ActivoController::class, 'destroy'])->name('destroy')->middleware('rol:ADMINISTRADOR');
+        Route::delete('/eliminar-seleccionados', [ActivoController::class, 'destroyMany'])->name('destroyMany')->middleware('rol:ADMINISTRADOR');
+        Route::delete('/{id}',      [ActivoController::class, 'destroy'])->name('destroy')->middleware('rol:ADMINISTRADOR');
 
         Route::get('/{id}/tarjeta',     [ActivoController::class, 'tarjeta'])->name('tarjeta');
         Route::get('/{id}/qr',          [ActivoController::class, 'descargarQr'])->name('descargar_qr');
         Route::get('/{id}/etiqueta',    [ActivoController::class, 'etiqueta'])->name('etiqueta');
         Route::get('/etiquetas',        [ActivoController::class, 'etiquetas'])->name('etiquetas');
         Route::get('/custodios/{idAmbiente}', [ActivoController::class, 'custodiosPorAmbiente'])->name('custodios');
+
+        // Importación masiva desde Excel o CSV
+        Route::get('/importar/form', [ImportarActivosController::class, 'form'])->name('importar.form');
+        Route::post('/importar',     [ImportarActivosController::class, 'store'])->name('importar.store');
+        Route::get('/importar/plantilla', [ImportarActivosController::class, 'template'])->name('importar.template');
     });
 
     // ==========================================================
@@ -262,7 +269,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         ->name('notificar-finalizacion');
 
     // ==========================================================
-    // ACTAS (BAJA, TRANSFERENCIA, RECEPCIÓN INDIVIDUAL, ALTA, LIBERACIÓN)
+    // ACTAS (BAJA, TRANSFERENCIA, RECEPCIÓN INDIVIDUAL, LIBERACIÓN)
     // ==========================================================
     Route::prefix('actas')->name('actas.')->group(function () {
 
@@ -301,28 +308,17 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::prefix('recepcion')->name('recepcion.')->group(function () {
             Route::get('/',                        [ActaRecepcionController::class, 'index'])->name('index');
             Route::get('/pdf/{id}',                [ActaRecepcionController::class, 'pdf'])->name('pdf');
+            Route::get('/pdf-multiple',            [ActaRecepcionController::class, 'pdfMultiple'])->name('pdf.multiple');
             Route::get('/activo/{activo}/pdf',     [ActaRecepcionController::class, 'actaRecepcionActivoPdf'])->name('activo.pdf');
             Route::get('/activo/{activo}/excel',   [ActaRecepcionController::class, 'actaRecepcionActivoExcel'])->name('activo.excel');
         });
 
-        // Acta de Alta
-        Route::get('/alta/{activo_id}/pdf', [ActaRecepcionController::class, 'actaAltaPdf'])->name('alta.pdf');
-
-        // Acta de Liberación
-        Route::prefix('liberacion')->name('liberacion.')->group(function () {
-            Route::get('/',                   [LiberacionController::class, 'index'])->name('index');
-            Route::get('/{ambiente}/pdf',     [LiberacionController::class, 'pdf'])->name('pdf');
-            Route::get('/{ambiente}/excel',   [LiberacionController::class, 'excel'])->name('excel');
-        });
     });
 
     // ==========================================================
     // CONFIGURACIÓN Y BACKUPS — Solo ADMIN
     // ==========================================================
     Route::middleware('rol:ADMINISTRADOR')->group(function () {
-        Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion.index');
-        Route::put('/configuracion/institucion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
-        Route::put('/configuracion/parametros', [ConfiguracionController::class, 'updateParametros'])->name('configuracion.updateParametros');
 
         Route::prefix('backup')->name('backup.')->group(function () {
             Route::get('/',  [\App\Http\Controllers\Web\BackupController::class, 'index'])->name('index');

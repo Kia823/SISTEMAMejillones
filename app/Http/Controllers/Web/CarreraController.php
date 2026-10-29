@@ -25,9 +25,28 @@ class CarreraController extends Controller
             fn ($q) => $q,
             fn ($q) => $q->whereIn('id_carrera', $idsCarreras)
         )
+            ->with([
+                'ambientes' => fn ($q) => $q->orderBy('nombre'),
+                'jefeCarrera',
+            ])
             ->withCount('ambientes')
-            ->orderBy('nombre')
             ->get();
+
+        $ordenJerarquico = [
+            'MEI' => 1,
+            'MAZ' => 2,
+            'INA' => 3,
+            'SIF' => 4,
+            'GTR' => 5,
+            'ELC' => 6,
+            'AGP' => 7,
+            'AGRO' => 7,
+        ];
+
+        $carreras = $carreras->sortBy(fn ($carrera) => [
+            $ordenJerarquico[$carrera->codigo] ?? 99,
+            $carrera->nombre,
+        ])->values();
 
         return view('carreras.list', compact('carreras'));
     }

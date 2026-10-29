@@ -8,6 +8,7 @@ use App\Models\Ambiente;
 use App\Models\Carrera;
 use App\Models\Categoria;
 use App\Models\FuenteFinanciamiento;
+use App\Models\HistorialReporte;
 use App\Support\PdfHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,10 @@ class ReporteController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $request->validate([
+            'mes_historial' => ['nullable', 'integer', 'between:1,12'],
+            'anio_historial' => ['nullable', 'integer', 'min:2000', 'max:2100'],
+        ]);
 
         // Totales generales excluyendo los dados de baja
         $queryBase = ActivoFijo::paraUsuario($user)->where("estado_registro", "!=", "BAJA");
@@ -44,10 +49,18 @@ class ReporteController extends Controller
         })->orderBy("nombre")->get();
 
         $categorias = Categoria::orderBy("nombre")->get();
+        $historialQuery = HistorialReporte::with('usuario')->latest();
+        if ($request->filled('mes_historial')) {
+            $historialQuery->whereMonth('created_at', $request->integer('mes_historial'));
+        }
+        if ($request->filled('anio_historial')) {
+            $historialQuery->whereYear('created_at', $request->integer('anio_historial'));
+        }
+        $historialReportes = $historialQuery->limit(100)->get();
 
         return view("reportes.index", compact(
             "totalBuenos", "totalRegulares", "totalMalos", "totalFueraServ",
-            "carreras", "ambientes", "categorias"
+            "carreras", "ambientes", "categorias", "historialReportes"
         ));
     }
 
@@ -250,8 +263,10 @@ class ReporteController extends Controller
             $carrera = \App\Models\Carrera::find($request->id_carrera);
         }
 
+        $nombreArchivo = 'Inventario_' . $this->sufijoTipoBien($tipoBien) . 'General_' . date('Y-m-d') . '.pdf';
+        $this->registrarDescarga('Inventario general', 'PDF', $nombreArchivo, $request);
         $pdf = PdfHelper::oficio('reportes.pdf.inventario_general', compact('reportes', 'tipoBien', 'ambiente', 'carrera'), 'landscape');
-        return $pdf->stream('Inventario_' . $this->sufijoTipoBien($tipoBien) . 'General_' . date('Y-m-d') . '.pdf');
+        return $pdf->stream($nombreArchivo);
     }
 
     public function inventarioGeneralExcel(Request $request)
@@ -343,11 +358,12 @@ class ReporteController extends Controller
             ];
         });
 
+        $nombreArchivo = 'Inventario_' . $this->sufijoTipoBien($tipoBien) . 'General_' . date('Y-m-d') . '.xls';
+        $this->registrarDescarga('Inventario general', 'EXCEL', $nombreArchivo, $request);
         return response()
             ->view('reportes.excel.inventario_general', compact('reportes', 'tipoBien'))
             ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
-            ->header('Content-Disposition', 'attachment; filename="Inventario_'
-                . $this->sufijoTipoBien($tipoBien) . 'General_' . date('Y-m-d') . '.xls"');
+            ->header('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"');
     }
 
     private function tipoBienReporte(Request $request): string
@@ -452,9 +468,12 @@ class ReporteController extends Controller
     public function porAmbienteExcel($id_ambiente)
     {
         $ambiente = $this->ambienteVisible($id_ambiente);
+        $nombreArchivo = 'Inventario_Ambiente_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $ambiente->nombre) . '_' . date('Y-m-d') . '.xls';
+        $this->registrarDescarga('Inventario por ambiente', 'EXCEL', $nombreArchivo);
         return response()
             ->view('reportes.excel.por_ambiente', compact('ambiente'))
-            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"');
     }
 
     // ============================================================
@@ -548,8 +567,10 @@ class ReporteController extends Controller
             $ambiente = \App\Models\Ambiente::with('carrera', 'custodios')->find($request->id_ambiente);
         }
 
+        $nombreArchivo = 'Inventario_Filtro_' . date('Y-m-d') . '.pdf';
+        $this->registrarDescarga('Inventario filtrado', 'PDF', $nombreArchivo, $request);
         $pdf = PdfHelper::oficio('reportes.pdf.inventario_general', compact('reportes', 'tipoBien', 'ambiente'), 'landscape');
-        return $pdf->stream('Inventario_Filtro_' . date('Y-m-d') . '.pdf');
+        return $pdf->stream($nombreArchivo);
     }
 
     public function excel(Request $request)
@@ -635,10 +656,12 @@ class ReporteController extends Controller
             ];
         });
 
+        $nombreArchivo = 'Inventario_Filtro_' . date('Y-m-d') . '.xls';
+        $this->registrarDescarga('Inventario filtrado', 'EXCEL', $nombreArchivo, $request);
         return response()
             ->view('reportes.excel.inventario_general', compact('reportes', 'tipoBien'))
             ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
-            ->header('Content-Disposition', 'attachment; filename="Inventario_Filtro_' . date('Y-m-d') . '.xls"');
+            ->header('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"');
     }
 
     protected function porAmbientePdfAction(Ambiente $ambiente)
@@ -710,8 +733,21 @@ class ReporteController extends Controller
             ];
         });
 
+        $nombreArchivo = 'Inventario_Ambiente_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $ambiente->nombre) . '_' . date('Y-m-d') . '.pdf';
+        $this->registrarDescarga('Inventario por ambiente', 'PDF', $nombreArchivo);
         $pdf = PdfHelper::oficio('reportes.pdf.por_ambiente', compact('ambiente', 'reportes'), 'landscape');
-        return $pdf->stream('Inventario_Ambiente_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $ambiente->nombre) . '_' . date('Y-m-d') . '.pdf');
+        return $pdf->stream($nombreArchivo);
+    }
+
+    private function registrarDescarga(string $tipoReporte, string $formato, string $nombreArchivo, ?Request $request = null): void
+    {
+        HistorialReporte::create([
+            'id_usuario' => Auth::id(),
+            'tipo_reporte' => $tipoReporte,
+            'formato' => $formato,
+            'nombre_archivo' => $nombreArchivo,
+            'filtros' => $request?->only(['tipo_bien', 'id_carrera', 'id_ambiente', 'id_categoria', 'estado_fisico', 'fuente', 'anio']),
+        ]);
     }
 
     protected function estadoFisicoTexto($estado): string
@@ -725,4 +761,3 @@ class ReporteController extends Controller
         };
     }
 }
-

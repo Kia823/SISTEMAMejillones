@@ -14,6 +14,7 @@ use App\Services\QRCodeService;
 use App\Support\PdfHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -101,7 +102,7 @@ public function create(Request $request)
 
         $idAmbientePreseleccionado = $request->input('id_ambiente');
 
-        $categoria = Categoria::when($idAmbientePreseleccionado, function($q) use ($idAmbientePreseleccionado) {
+        $categorias = Categoria::when($idAmbientePreseleccionado, function($q) use ($idAmbientePreseleccionado) {
             $q->where('id_ambiente', $idAmbientePreseleccionado);
         })->orderBy('nombre')->get();
 
@@ -109,12 +110,12 @@ public function create(Request $request)
         $fuentes    = FuenteFinanciamiento::orderBy('nombre')->get();
 
         // ⭐ Filtrar custodios por ambiente si está preseleccionado
-        $productosQuery = User::where('estado', 'ACTIVO')
-            ->with(['items' => fn($q) => $q->whereNull('item_preference.fecha_fin')])
+        $usuariosQuery = User::where('estado', 'ACTIVO')
+            ->with(['items' => fn($q) => $q->whereNull('item_usuario.fecha_fin')])
             ->orderBy('nombre_completo');
 
         if ($idAmbientePreseleccionado) {
-            $productosQuery->where(function($q) use ($idAmbientePreseleccionado) {
+            $usuariosQuery->where(function($q) use ($idAmbientePreseleccionado) {
                 // Que tenga activos en ese ambiente
                 $q->ewhereHas('activosCustodiados', function($sub) use ($idAmbientePreseleccionado) {
                     $sub->where('id_ambiente', $idAmbientePreseleccionado);
@@ -126,14 +127,12 @@ public function create(Request $request)
             });
         }
 
-        $productos = $productosQuery->get();
+        $usuarios = $usuariosQuery->get();
 
-        $config  = DB::table('configuraciones')->first();
-        $prefijo = $config->prefijo_activo ?? 'TPM-';
-        $codigoSugerido = $prefijo . date('Y') . '-' . rand(1000, 9999);
+        $codigoSugerido = 'TPM-' . date('Y') . '-' . rand(1000, 9999);
 
         return view('activos.create', compact(
-            'categoria', 'ambientes', 'fuentes', 'productos', 'idAmbientePreseleccionado', 'codigoSugerido'
+            'categorias', 'ambientes', 'fuentes', 'usuarios', 'idAmbientePreseleccionado', 'codigoSugerido'
         ));
     }
 
@@ -205,6 +204,7 @@ public function create(Request $request)
         ]);
 
         $data['tipo_bien'] = $tipoBien;
+        $data['rv'] = $request->input('rv', 'NO');
         $cantidad = max(1, min(100, (int) $request->input('cantidad', 1)));
         $data['id_item'] = $this->itemDelCustodio($data['id_custodio'] ?? null);
 
@@ -348,6 +348,7 @@ public function create(Request $request)
         $data = $request->validate([
             'codigo_activo'     => ['required', 'string', 'max:50', \Illuminate\Validation\Rule::unique('activos_fijos', 'codigo_activo')->ignore($activo->id_activo, 'id_activo')],
             'tipo_bien'         => 'required|in:ACTIVO_FIJO,NO_ACTIVO',
+            'rv'                => 'nullable|in:SI,NO',
             'nombre'            => 'required|string|max:150',
             'marca'             => $tipoBien === 'ACTIVO_FIJO' ? 'required|string|max:80' : 'nullable|string|max:80',
             'modelo'            => $tipoBien === 'ACTIVO_FIJO' ? 'required|string|max:80' : 'nullable|string|max:80',
@@ -364,6 +365,7 @@ public function create(Request $request)
         ]);
 
         $data['tipo_bien'] = $tipoBien;
+        $data['rv'] = $request->input('rv', $activo->rv ?? 'NO');
         $data['id_item'] = $this->itemDelCustodio($data['id_custodio'] ?? null);
 
         if ($request->hasFile('imagen')) {
@@ -413,26 +415,62 @@ public function create(Request $request)
             Storage::disk('public')->delete($activo->ruta_qr);
         }
 
-        $activo->delete();
+        DB::transaction(function () use ($activo, $id) {
+            // Registros hijos que referencian al activo (FK sin cascade on delete)
+            DB::table('verificaciones_fisicas')->where('id_activo', $id)->delete();
+            DB::table('actas_transferencia')->where('id_activo', $id)->delete();
+            DB::table('actas_baja')->where('id_activo', $id)->delete();
+
+            if (Schema::hasTable('detalle_acta_bajas')) {
+                DB::table('detalle_acta_bajas')->where('activo_id', $id)->delete();
+            }
+            if (Schema::hasTable('detalle_acta_activos')) {
+                DB::table('detalle_acta_activos')->where('activo_id', $id)->delete();
+            }
+
+            $activo->delete();
+        });
 
         return redirect()->route('categorias.show', $idCategoria)
             ->with('success', 'Activo eliminado correctamente.');
     }
 
-    public function actaAltaPdf($id)
+    public function destroyMany(Request $request)
     {
-        $activo = $this->activoVisible($id);
+        $this->authorizeActivoModification();
 
-        $pdf = Pdf::loadView('actas.alta_pdf', compact('activo'))
-            ->setPaper('letter', 'landscape')
-            ->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'defaultMediaType' => 'screen',
-                'isFontSubsettingEnabled' => true,
-            ]);
+        $datos = $request->validate([
+            'activos' => ['required', 'array', 'min:1'],
+            'activos.*' => ['integer', 'distinct', 'exists:activos_fijos,id_activo'],
+        ], [
+            'activos.required' => 'Seleccione al menos un activo.',
+        ]);
 
-        return $pdf->stream('acta_alta_' . $activo->codigo_activo . '.pdf');
+        DB::transaction(function () use ($datos): void {
+            foreach (ActivoFijo::whereIn('id_activo', $datos['activos'])->get() as $activo) {
+                foreach ([$activo->imagen, $activo->ruta_qr] as $archivo) {
+                    if ($archivo && Storage::disk('public')->exists($archivo)) {
+                        Storage::disk('public')->delete($archivo);
+                    }
+                }
+
+                DB::table('verificaciones_fisicas')->where('id_activo', $activo->id_activo)->delete();
+                DB::table('actas_transferencia')->where('id_activo', $activo->id_activo)->delete();
+                DB::table('actas_baja')->where('id_activo', $activo->id_activo)->delete();
+
+                if (Schema::hasTable('detalle_acta_bajas')) {
+                    DB::table('detalle_acta_bajas')->where('activo_id', $activo->id_activo)->delete();
+                }
+                if (Schema::hasTable('detalle_acta_activos')) {
+                    DB::table('detalle_acta_activos')->where('activo_id', $activo->id_activo)->delete();
+                }
+
+                $activo->delete();
+            }
+        });
+
+        return redirect()->route('activos.index')
+            ->with('success', count($datos['activos']) . ' activo(s) eliminado(s) correctamente.');
     }
 
     public function buscarPorCodigo(Request $request, $codigo = null)

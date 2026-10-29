@@ -30,6 +30,13 @@ class User extends Authenticatable
     'puede_verificar' => 'boolean',  // ⭐ NUEVO
 ];
 
+public function setNombreCompletoAttribute(?string $nombre): void
+{
+    $this->attributes['nombre_completo'] = $nombre === null
+        ? null
+        : mb_strtoupper(trim($nombre), 'UTF-8');
+}
+
     // Cache por instancia para evitar consultas repetidas en el mismo request
     protected ?array $_idsAmbientesVisiblesCache = null;
     protected ?array $_idsCarrerasVisiblesCache = null;
@@ -39,6 +46,11 @@ class User extends Authenticatable
     public function getAuthPassword()
     {
         return $this->password;
+    }
+
+    public function historialReportes()
+    {
+        return $this->hasMany(HistorialReporte::class, 'id_usuario', 'id_usuario');
     }
 
     public function verifyPassword(string $password): bool

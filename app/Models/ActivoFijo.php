@@ -16,7 +16,7 @@ class ActivoFijo extends Model
     protected $keyType    = 'int';
 
    protected $fillable = [
-    'codigo_activo', 'tipo_bien', 'nombre', 'descripcion', 'observaciones',
+    'codigo_activo', 'tipo_bien', 'rv', 'nombre', 'descripcion', 'observaciones',
     'marca', 'modelo', 'numero_serie',
     'fecha_adquisicion', 'valor_adquisicion',
     'id_categoria', 'id_ambiente', 'id_fuente', 'id_custodio', 'id_item',
