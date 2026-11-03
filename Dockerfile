@@ -63,10 +63,11 @@ CMD php artisan config:clear && \
     php artisan db:seed --force || true && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
 
-    # ============================================================
+
+    
+# ============================================================
 # ARRANQUE PARA RAILWAY (Base de datos limpia + Seeders)
 # ============================================================
-# CMD php artisan config:clear && \
- #   php artisan migrate:fresh --force --seed && \
-  #  php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
-    
+CMD php artisan config:clear && \
+    php artisan migrate:fresh --force --seed && \
+    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
